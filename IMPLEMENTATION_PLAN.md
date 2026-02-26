@@ -24,14 +24,14 @@ Check off items as they are completed.
 - [x] Zod validation on all board mutations
 - [x] Wire board CRUD UI to server actions
 
-## Milestone 3: Ticket CRUD & Backlog
-- [ ] Server action: `createTicket` (creates in TODO with orderKey)
-- [ ] Server action: `updateTicketFields` (title, description, type, assignee, team)
-- [ ] TODO backlog list component — renders ticket cards, supports ordering
-- [ ] DONE bucket list component — renders completed tickets
-- [ ] Ticket card component with type color badge
-- [ ] Zod validation on all ticket mutations
-- [ ] Audit events: TICKET_CREATED, TITLE_UPDATED, DESCRIPTION_UPDATED, TYPE_CHANGED, ASSIGNEE_CHANGED, TEAM_CHANGED
+## Milestone 3: Ticket CRUD & Backlog ✅
+- [x] Server action: `createTicket` (creates in TODO with orderKey)
+- [x] Server action: `updateTicketFields` (title, description, type, assignee, team)
+- [x] TODO backlog list component — renders ticket cards, supports ordering
+- [x] DONE bucket list component — renders completed tickets
+- [x] Ticket card component with type color badge
+- [x] Zod validation on all ticket mutations
+- [x] Audit events: TICKET_CREATED, TITLE_UPDATED, DESCRIPTION_UPDATED, TYPE_CHANGED, ASSIGNEE_CHANGED, TEAM_CHANGED
 
 ## Milestone 4: Board Rendering & Timer-Based Movement
 - [ ] Implement `computeStepIndex(startedAt, stepIntervalSeconds, maxSteps)` utility
