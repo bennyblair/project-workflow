@@ -1,0 +1,25 @@
+# env
+.env
+.env.local
+.env.production
+
+# deps
+node_modules/
+
+# next
+.next/
+out/
+
+# prisma
+prisma/migrations/**/migration_lock.toml
+
+# misc
+*.tsbuildinfo
+next-env.d.ts
+
+# test
+test-results/
+playwright-report/
+
+# docker
+postgres-data/
