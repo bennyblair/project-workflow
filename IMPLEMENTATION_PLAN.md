@@ -5,24 +5,24 @@ Check off items as they are completed.
 
 ---
 
-## Milestone 1: Project Scaffold & Infrastructure
-- [ ] Initialize Next.js 16 App Router project with pnpm + TypeScript
-- [ ] Configure TailwindCSS + shadcn/ui
-- [ ] Create `docker-compose.yml` for local PostgreSQL
-- [ ] Create `.env.example` with DATABASE_URL
-- [ ] Set up Prisma ORM, define full schema (all models from spec)
-- [ ] Generate and run initial Prisma migration
-- [ ] Create seed script with 2 boards, types (Bug 60s, Task 180s, Feature 300s), people, teams, swimlanes, color rules, and tickets across TODO/ACTIVE/DONE
-- [ ] Add pnpm scripts: `dev`, `build`, `prisma:migrate`, `prisma:seed`
-- [ ] Verify: `docker compose up -d && pnpm prisma:migrate && pnpm prisma:seed && pnpm dev` works end-to-end
+## Milestone 1: Project Scaffold & Infrastructure ✅
+- [x] Initialize Next.js 16 App Router project with pnpm + TypeScript
+- [x] Configure TailwindCSS + shadcn/ui
+- [x] Create `docker-compose.yml` for local PostgreSQL
+- [x] Create `.env.example` with DATABASE_URL
+- [x] Set up Prisma ORM, define full schema (all models from spec)
+- [ ] Generate and run initial Prisma migration *(requires Postgres)*
+- [x] Create seed script with 2 boards, types (Bug 60s, Task 180s, Feature 300s), people, teams, swimlanes, color rules, and tickets across TODO/ACTIVE/DONE
+- [x] Add pnpm scripts: `dev`, `build`, `prisma:migrate`, `prisma:seed`
+- [ ] Verify: `docker compose up -d && pnpm prisma:migrate && pnpm prisma:seed && pnpm dev` works end-to-end *(requires Postgres)*
 
-## Milestone 2: Route Skeleton & Board CRUD
-- [ ] `/boards` page — list all boards, create board form
-- [ ] `/board/[boardId]` page — empty shell with three-section layout (TODO | ACTIVE | DONE)
-- [ ] `/settings/[boardId]` page — empty shell with tab navigation
-- [ ] Server actions: `createBoard`, `renameBoard`, `deleteBoard`
-- [ ] Zod validation on all board mutations
-- [ ] Wire board CRUD UI to server actions
+## Milestone 2: Route Skeleton & Board CRUD ✅
+- [x] `/boards` page — list all boards, create board form
+- [x] `/board/[boardId]` page — empty shell with three-section layout (TODO | ACTIVE | DONE)
+- [x] `/settings/[boardId]` page — empty shell with tab navigation
+- [x] Server actions: `createBoard`, `renameBoard`, `deleteBoard`
+- [x] Zod validation on all board mutations
+- [x] Wire board CRUD UI to server actions
 
 ## Milestone 3: Ticket CRUD & Backlog
 - [ ] Server action: `createTicket` (creates in TODO with orderKey)
