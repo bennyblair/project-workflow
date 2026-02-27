@@ -18,6 +18,7 @@ export default async function BoardPage({ params }: { params: Params }) {
       },
       ticketTypes: { orderBy: { createdAt: "asc" } },
       swimlanes: { orderBy: { order: "asc" } },
+      colorRules: { orderBy: { order: "asc" } },
     },
   });
 
@@ -40,6 +41,13 @@ export default async function BoardPage({ params }: { params: Params }) {
     name: lane.name,
     order: lane.order,
     isCatchAll: lane.isCatchAll,
+    filterExprJson: lane.filterExprJson,
+  }));
+
+  const serializedColorRules = board.colorRules.map((rule) => ({
+    order: rule.order,
+    whenExprJson: rule.whenExprJson,
+    colorHex: rule.colorHex,
   }));
 
   const serializeTicket = (t: (typeof board.tickets)[number]) => ({
@@ -52,6 +60,12 @@ export default async function BoardPage({ params }: { params: Params }) {
     assigneeId: t.assigneeId,
     team: t.team ? { name: t.team.name } : null,
     teamId: t.teamId,
+  });
+
+  const serializeActiveTicket = (t: (typeof board.tickets)[number]) => ({
+    ...serializeTicket(t),
+    startedAt: t.startedAt?.toISOString() ?? new Date().toISOString(),
+    stepIntervalSeconds: t.type.stepIntervalSeconds,
   });
 
   return (
@@ -76,10 +90,13 @@ export default async function BoardPage({ params }: { params: Params }) {
       <BoardShell
         boardId={board.id}
         todoTickets={todoTickets.map(serializeTicket)}
-        activeTickets={activeTickets.map(serializeTicket)}
+        activeTickets={activeTickets.map(serializeActiveTicket)}
         doneTickets={doneTickets.map(serializeTicket)}
         ticketTypes={serializedTicketTypes}
         swimlanes={serializedSwimlanes}
+        colorRules={serializedColorRules}
+        maxSteps={board.maxSteps}
+        refreshIntervalSeconds={board.refreshIntervalSeconds}
         settingsHref={`/settings/${board.id}`}
       />
     </div>

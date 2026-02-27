@@ -34,15 +34,15 @@ Check off items as they are completed.
 - [x] Audit events: TICKET_CREATED, TITLE_UPDATED, DESCRIPTION_UPDATED, TYPE_CHANGED, ASSIGNEE_CHANGED, TEAM_CHANGED
 
 ## Milestone 4: Board Rendering & Timer-Based Movement
-- [ ] Implement `computeStepIndex(startedAt, stepIntervalSeconds, maxSteps)` utility
-- [ ] Implement swimlane filter evaluator (AND/OR expression tree)
-- [ ] Implement color rule evaluator (AND/OR with stepIndex support)
-- [ ] ACTIVE grid component: columns = swimlanes, rows = time lanes (0..maxSteps-1)
-- [ ] Render rows: stepIndex 0 at bottom (newest), maxSteps-1 at top (oldest)
-- [ ] Client-side `setInterval` using `board.refreshIntervalSeconds` to recompute stepIndex
-- [ ] Group ACTIVE tickets into grid cells by (swimlane, stepIndex)
-- [ ] Apply color rules: first match wins, fallback to TicketType.defaultColorHex
-- [ ] Basic CSS transitions for row movement
+- [x] Implement `computeStepIndex(startedAt, stepIntervalSeconds, maxSteps)` utility
+- [x] Implement swimlane filter evaluator (AND/OR expression tree)
+- [x] Implement color rule evaluator (AND/OR with stepIndex support)
+- [x] ACTIVE grid component: columns = swimlanes, rows = time lanes (0..maxSteps-1)
+- [x] Render rows: stepIndex 0 at bottom (newest), maxSteps-1 at top (oldest)
+- [x] Client-side `setInterval` using `board.refreshIntervalSeconds` to recompute stepIndex
+- [x] Group ACTIVE tickets into grid cells by (swimlane, stepIndex)
+- [x] Apply color rules: first match wins, fallback to TicketType.defaultColorHex
+- [x] Basic CSS transitions for row movement
 
 ## Milestone 5: Drag & Drop Flows
 - [ ] Integrate dnd-kit

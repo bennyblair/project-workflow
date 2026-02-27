@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { TodoBacklog } from "@/components/todo-backlog";
 import { DoneBucket } from "@/components/done-bucket";
-import { TicketCard } from "@/components/ticket-card";
+import { ActiveGrid } from "@/components/active-grid";
 
 type SerializedTicket = {
   id: string;
@@ -17,11 +16,17 @@ type SerializedTicket = {
   teamId: string | null;
 };
 
+type ActiveTicket = SerializedTicket & {
+  startedAt: string;
+  stepIntervalSeconds: number;
+};
+
 type Swimlane = {
   id: string;
   name: string;
   order: number;
   isCatchAll: boolean;
+  filterExprJson: unknown;
 };
 
 type TicketType = {
@@ -31,13 +36,22 @@ type TicketType = {
   defaultColorHex: string;
 };
 
+type ColorRule = {
+  order: number;
+  whenExprJson: unknown;
+  colorHex: string;
+};
+
 type Props = {
   boardId: string;
   todoTickets: SerializedTicket[];
-  activeTickets: SerializedTicket[];
+  activeTickets: ActiveTicket[];
   doneTickets: SerializedTicket[];
   ticketTypes: TicketType[];
   swimlanes: Swimlane[];
+  colorRules: ColorRule[];
+  maxSteps: number;
+  refreshIntervalSeconds: number;
   settingsHref: string;
 };
 
@@ -48,6 +62,9 @@ export function BoardShell({
   doneTickets,
   ticketTypes,
   swimlanes,
+  colorRules,
+  maxSteps,
+  refreshIntervalSeconds,
   settingsHref,
 }: Props) {
   return (
@@ -67,51 +84,18 @@ export function BoardShell({
           </h2>
           <span className="text-xs text-muted-foreground">
             {activeTickets.length} ticket{activeTickets.length !== 1 && "s"} ·{" "}
-            {swimlanes.length} swimlane{swimlanes.length !== 1 && "s"}
+            {swimlanes.length} swimlane{swimlanes.length !== 1 && "s"} ·{" "}
+            {maxSteps} steps · {refreshIntervalSeconds}s refresh
           </span>
         </div>
-        <div className="flex-1 overflow-auto p-3">
-          {swimlanes.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No swimlanes configured.{" "}
-              <Link href={settingsHref} className="underline">
-                Add swimlanes in settings
-              </Link>
-            </p>
-          ) : (
-            <div
-              className="grid gap-3"
-              style={{
-                gridTemplateColumns: `repeat(${swimlanes.length}, minmax(200px, 1fr))`,
-              }}
-            >
-              {/* Column headers */}
-              {swimlanes.map((lane) => (
-                <div
-                  key={lane.id}
-                  className="rounded-t-lg bg-muted/50 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                >
-                  {lane.name}
-                </div>
-              ))}
-              {/* Ticket cells — stubbed lane assignment for now */}
-              {swimlanes.map((lane) => (
-                <div key={lane.id} className="space-y-2">
-                  {activeTickets
-                    .filter(() => lane.isCatchAll)
-                    .map((ticket) => (
-                      <TicketCard key={ticket.id} ticket={ticket} />
-                    ))}
-                  {!lane.isCatchAll && (
-                    <p className="py-4 text-center text-xs text-muted-foreground">
-                      Filter evaluation coming soon
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ActiveGrid
+          tickets={activeTickets}
+          swimlanes={swimlanes}
+          colorRules={colorRules}
+          maxSteps={maxSteps}
+          refreshIntervalSeconds={refreshIntervalSeconds}
+          settingsHref={settingsHref}
+        />
       </section>
 
       {/* DONE column */}
