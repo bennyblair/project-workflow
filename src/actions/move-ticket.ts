@@ -1,0 +1,300 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { evaluateFilter } from "@/lib/engine/filter-evaluator";
+import type { FilterExpr, FilterContext } from "@/lib/engine/filter-evaluator";
+
+// ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
+type MoveResult = { success: boolean; error?: string };
+
+/** Build a FilterContext from ticket data + optional overrides from onDropPatch */
+function buildFilterCtx(
+  ticket: {
+    typeId: string;
+    teamId: string | null;
+    assigneeId: string | null;
+    status: string;
+    title: string;
+    description: string | null;
+    type: { key: string };
+    team: { name: string } | null;
+    assignee: { name: string } | null;
+  },
+  overrides: Record<string, unknown> = {},
+): FilterContext {
+  const merged = { ...ticket, ...overrides };
+  return {
+    typeId: (merged.typeId as string) ?? null,
+    teamId: (merged.teamId as string) ?? null,
+    assigneeId: (merged.assigneeId as string) ?? null,
+    status: (merged.status as string) ?? ticket.status,
+    title: (merged.title as string) ?? ticket.title,
+    description: (merged.description as string) ?? ticket.description,
+    "type.key": ticket.type?.key,
+    "team.name": ticket.team?.name,
+    "assignee.name": ticket.assignee?.name,
+  };
+}
+
+/** Compute orderKey at the end of a given status bucket (optionally filtered by swimlane). */
+async function nextOrderKey(boardId: string, status: "TODO" | "ACTIVE" | "DONE"): Promise<number> {
+  const last = await prisma.ticket.findFirst({
+    where: { boardId, status },
+    orderBy: { orderKey: "desc" },
+    select: { orderKey: true },
+  });
+  return (last?.orderKey ?? 0) + 1000;
+}
+
+// ---------------------------------------------------------------------------
+// moveTicketToActive — TODO → ACTIVE  or  DONE → ACTIVE
+// ---------------------------------------------------------------------------
+
+export async function moveTicketToActive(
+  ticketId: string,
+  targetSwimlaneId: string,
+): Promise<MoveResult> {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: { type: true, assignee: true, team: true },
+  });
+  if (!ticket) return { success: false, error: "Ticket not found" };
+  if (ticket.status === "ACTIVE" && !ticket.doneAt) {
+    // Already active — this is a swimlane move, not a status move
+    return moveActiveToSwimlane(ticketId, targetSwimlaneId);
+  }
+
+  const swimlane = await prisma.swimlane.findUnique({
+    where: { id: targetSwimlaneId },
+  });
+  if (!swimlane) return { success: false, error: "Swimlane not found" };
+
+  // Build the data update: status, startedAt, clear doneAt, apply onDropPatch
+  const patch = (swimlane.onDropPatchJson ?? {}) as Record<string, unknown>;
+  const updateData: Record<string, unknown> = {
+    ...patch,
+    status: "ACTIVE",
+    startedAt: new Date(),
+    doneAt: null,
+  };
+
+  // Validate that the ticket will match the target swimlane filter after patching
+  if (!swimlane.isCatchAll) {
+    const ctx = buildFilterCtx(ticket, { ...patch, status: "ACTIVE" });
+    const expr = swimlane.filterExprJson as FilterExpr;
+    if (!evaluateFilter(expr, ctx)) {
+      return {
+        success: false,
+        error: `Ticket would not match swimlane "${swimlane.name}" filter after applying patch`,
+      };
+    }
+  }
+
+  const orderKey = await nextOrderKey(ticket.boardId, "ACTIVE");
+
+  const fromStatus = ticket.status;
+  await prisma.$transaction([
+    prisma.ticket.update({
+      where: { id: ticketId },
+      data: { ...updateData, orderKey },
+    }),
+    prisma.auditEvent.create({
+      data: {
+        ticketId,
+        type: "STATUS_CHANGED",
+        dataJson: { from: fromStatus, to: "ACTIVE" },
+      },
+    }),
+    // If onDropPatch changed swimlane-relevant fields, add SWIMLANE_DROPPED audit
+    ...(Object.keys(patch).length > 0
+      ? [
+          prisma.auditEvent.create({
+            data: {
+              ticketId,
+              type: "SWIMLANE_DROPPED",
+              dataJson: {
+                swimlaneName: swimlane.name,
+                patch: JSON.parse(JSON.stringify(patch)) as Record<string, string>,
+              },
+            },
+          }),
+        ]
+      : []),
+  ]);
+
+  revalidatePath(`/board/${ticket.boardId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// moveActiveToSwimlane — ACTIVE → ACTIVE (different swimlane)
+// ---------------------------------------------------------------------------
+
+export async function moveActiveToSwimlane(
+  ticketId: string,
+  targetSwimlaneId: string,
+): Promise<MoveResult> {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: { type: true, assignee: true, team: true },
+  });
+  if (!ticket) return { success: false, error: "Ticket not found" };
+  if (ticket.status !== "ACTIVE") {
+    return { success: false, error: "Ticket is not ACTIVE" };
+  }
+
+  const swimlane = await prisma.swimlane.findUnique({
+    where: { id: targetSwimlaneId },
+  });
+  if (!swimlane) return { success: false, error: "Swimlane not found" };
+
+  const patch = (swimlane.onDropPatchJson ?? {}) as Record<string, unknown>;
+
+  // Validate the ticket will match the target swimlane after patch
+  if (!swimlane.isCatchAll) {
+    const ctx = buildFilterCtx(ticket, patch);
+    const expr = swimlane.filterExprJson as FilterExpr;
+    if (!evaluateFilter(expr, ctx)) {
+      return {
+        success: false,
+        error: `Ticket would not match swimlane "${swimlane.name}" filter after applying patch`,
+      };
+    }
+  }
+
+  // Do NOT change startedAt!
+  if (Object.keys(patch).length > 0) {
+    await prisma.$transaction([
+      prisma.ticket.update({
+        where: { id: ticketId },
+        data: patch,
+      }),
+      prisma.auditEvent.create({
+        data: {
+          ticketId,
+          type: "SWIMLANE_DROPPED",
+          dataJson: {
+            swimlaneName: swimlane.name,
+            patch: JSON.parse(JSON.stringify(patch)) as Record<string, string>,
+          },
+        },
+      }),
+    ]);
+  }
+
+  revalidatePath(`/board/${ticket.boardId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// moveTicketToDone — ACTIVE → DONE
+// ---------------------------------------------------------------------------
+
+export async function moveTicketToDone(
+  ticketId: string,
+): Promise<MoveResult> {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true, status: true, boardId: true },
+  });
+  if (!ticket) return { success: false, error: "Ticket not found" };
+  if (ticket.status !== "ACTIVE") {
+    return { success: false, error: "Only ACTIVE tickets can be moved to DONE" };
+  }
+
+  const orderKey = await nextOrderKey(ticket.boardId, "DONE");
+
+  await prisma.$transaction([
+    prisma.ticket.update({
+      where: { id: ticketId },
+      data: { status: "DONE", doneAt: new Date(), orderKey },
+    }),
+    prisma.auditEvent.create({
+      data: {
+        ticketId,
+        type: "STATUS_CHANGED",
+        dataJson: { from: "ACTIVE", to: "DONE" },
+      },
+    }),
+  ]);
+
+  revalidatePath(`/board/${ticket.boardId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// moveTicketToTodo — DONE → TODO
+// ---------------------------------------------------------------------------
+
+export async function moveTicketToTodo(
+  ticketId: string,
+): Promise<MoveResult> {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true, status: true, boardId: true },
+  });
+  if (!ticket) return { success: false, error: "Ticket not found" };
+  if (ticket.status !== "DONE") {
+    return { success: false, error: "Only DONE tickets can be moved to TODO" };
+  }
+
+  const orderKey = await nextOrderKey(ticket.boardId, "TODO");
+
+  await prisma.$transaction([
+    prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        status: "TODO",
+        startedAt: null,
+        doneAt: null,
+        orderKey,
+      },
+    }),
+    prisma.auditEvent.create({
+      data: {
+        ticketId,
+        type: "STATUS_CHANGED",
+        dataJson: { from: "DONE", to: "TODO" },
+      },
+    }),
+  ]);
+
+  revalidatePath(`/board/${ticket.boardId}`);
+  return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// reorderTicket — update orderKey for within-cell reordering
+// ---------------------------------------------------------------------------
+
+export async function reorderTicket(
+  ticketId: string,
+  newOrderKey: number,
+): Promise<MoveResult> {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true, boardId: true },
+  });
+  if (!ticket) return { success: false, error: "Ticket not found" };
+
+  await prisma.$transaction([
+    prisma.ticket.update({
+      where: { id: ticketId },
+      data: { orderKey: newOrderKey },
+    }),
+    prisma.auditEvent.create({
+      data: {
+        ticketId,
+        type: "ORDER_CHANGED",
+        dataJson: { orderKey: newOrderKey },
+      },
+    }),
+  ]);
+
+  revalidatePath(`/board/${ticket.boardId}`);
+  return { success: true };
+}

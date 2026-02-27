@@ -1,4 +1,6 @@
 import { TicketCard } from "@/components/ticket-card";
+import { DraggableTicket } from "@/components/draggable-ticket";
+import { DroppableZone } from "@/components/droppable-zone";
 
 type Ticket = {
   id: string;
@@ -25,21 +27,28 @@ export function DoneBucket({ tickets, onTicketClick }: Props) {
         </span>
       </div>
       <div className="flex-1 overflow-y-auto p-3">
-        <div className="space-y-2">
-          {tickets.map((ticket) => (
-            <TicketCard
-              key={ticket.id}
-              ticket={ticket}
-              variant="done"
-              onClick={onTicketClick ? () => onTicketClick(ticket.id) : undefined}
-            />
-          ))}
-          {tickets.length === 0 && (
-            <p className="py-8 text-center text-xs text-muted-foreground">
-              No completed tickets
-            </p>
-          )}
-        </div>
+        <DroppableZone id="done-zone" data={{ zone: "done" }} className="min-h-[100px]">
+          <div className="space-y-2">
+            {tickets.map((ticket) => (
+              <DraggableTicket
+                key={ticket.id}
+                id={ticket.id}
+                data={{ ticketId: ticket.id, sourceZone: "done" }}
+              >
+                <TicketCard
+                  ticket={ticket}
+                  variant="done"
+                  onClick={onTicketClick ? () => onTicketClick(ticket.id) : undefined}
+                />
+              </DraggableTicket>
+            ))}
+            {tickets.length === 0 && (
+              <p className="py-8 text-center text-xs text-muted-foreground">
+                No completed tickets
+              </p>
+            )}
+          </div>
+        </DroppableZone>
       </div>
     </section>
   );

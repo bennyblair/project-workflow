@@ -45,17 +45,17 @@ Check off items as they are completed.
 - [x] Basic CSS transitions for row movement
 
 ## Milestone 5: Drag & Drop Flows
-- [ ] Integrate dnd-kit
-- [ ] DnD flow: TODO → ACTIVE (set status=ACTIVE, startedAt=now, apply onDropPatch)
-- [ ] DnD flow: ACTIVE → ACTIVE (apply onDropPatch, do NOT change startedAt)
-- [ ] DnD flow: ACTIVE → ACTIVE same cell reorder (update orderKey only)
-- [ ] DnD flow: ACTIVE → DONE (set status=DONE, doneAt=now)
-- [ ] DnD flow: DONE → TODO (set status=TODO, clear startedAt/doneAt)
-- [ ] DnD flow: DONE → ACTIVE (set status=ACTIVE, startedAt=now, clear doneAt)
-- [ ] Server-side onDropPatch validation: ticket must match target swimlane filter after patch
-- [ ] Server action: `moveTicketToActive`, `moveTicketToDone`, `moveTicketToTodo`
-- [ ] Server action: `reorderTicket`
-- [ ] Audit events: STATUS_CHANGED, SWIMLANE_DROPPED, ORDER_CHANGED
+- [x] Integrate dnd-kit
+- [x] DnD flow: TODO → ACTIVE (set status=ACTIVE, startedAt=now, apply onDropPatch)
+- [x] DnD flow: ACTIVE → ACTIVE (apply onDropPatch, do NOT change startedAt)
+- [x] DnD flow: ACTIVE → ACTIVE same cell reorder (update orderKey only)
+- [x] DnD flow: ACTIVE → DONE (set status=DONE, doneAt=now)
+- [x] DnD flow: DONE → TODO (set status=TODO, clear startedAt/doneAt)
+- [x] DnD flow: DONE → ACTIVE (set status=ACTIVE, startedAt=now, clear doneAt)
+- [x] Server-side onDropPatch validation: ticket must match target swimlane filter after patch
+- [x] Server action: `moveTicketToActive`, `moveTicketToDone`, `moveTicketToTodo`
+- [x] Server action: `reorderTicket`
+- [x] Audit events: STATUS_CHANGED, SWIMLANE_DROPPED, ORDER_CHANGED
 
 ## Milestone 6: Ticket Detail Panel
 - [ ] Right-side slide-out panel on ticket click

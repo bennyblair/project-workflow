@@ -1,8 +1,27 @@
 "use client";
 
+import { useCallback, useState, useTransition } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
 import { TodoBacklog } from "@/components/todo-backlog";
 import { DoneBucket } from "@/components/done-bucket";
 import { ActiveGrid } from "@/components/active-grid";
+import { TicketCard } from "@/components/ticket-card";
+import type { DragData } from "@/components/draggable-ticket";
+import type { DropZoneData } from "@/components/droppable-zone";
+import {
+  moveTicketToActive,
+  moveActiveToSwimlane,
+  moveTicketToDone,
+  moveTicketToTodo,
+} from "@/actions/move-ticket";
 
 type SerializedTicket = {
   id: string;
@@ -67,39 +86,144 @@ export function BoardShell({
   refreshIntervalSeconds,
   settingsHref,
 }: Props) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
+  // Find the ticket being dragged for the overlay
+  const allTickets = [
+    ...todoTickets.map((t) => ({ ...t, zone: "todo" as const })),
+    ...activeTickets.map((t) => ({ ...t, zone: "active" as const })),
+    ...doneTickets.map((t) => ({ ...t, zone: "done" as const })),
+  ];
+  const draggedTicket = activeId
+    ? allTickets.find((t) => t.id === activeId)
+    : null;
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    setError(null);
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveId(null);
+      const { active, over } = event;
+      if (!over) return;
+
+      const dragData = active.data.current as DragData | undefined;
+      const dropData = over.data.current as DropZoneData | undefined;
+      if (!dragData || !dropData) return;
+
+      const ticketId = dragData.ticketId;
+      const sourceZone = dragData.sourceZone;
+      const targetZone = dropData.zone;
+
+      // Same zone, no swimlane change → ignore (or reorder — not implemented for MVP)
+      if (sourceZone === targetZone && targetZone !== "active") return;
+
+      startTransition(async () => {
+        let result: { success: boolean; error?: string };
+
+        if (targetZone === "active") {
+          const swimlaneId = dropData.swimlaneId;
+          if (!swimlaneId) return;
+
+          if (sourceZone === "active") {
+            // ACTIVE → ACTIVE: swimlane move
+            if (dragData.sourceSwimlaneId === swimlaneId) return; // same cell
+            result = await moveActiveToSwimlane(ticketId, swimlaneId);
+          } else {
+            // TODO → ACTIVE or DONE → ACTIVE
+            result = await moveTicketToActive(ticketId, swimlaneId);
+          }
+        } else if (targetZone === "done") {
+          if (sourceZone === "done") return; // already done
+          if (sourceZone === "active") {
+            result = await moveTicketToDone(ticketId);
+          } else {
+            // TODO → DONE not in spec, ignore
+            return;
+          }
+        } else if (targetZone === "todo") {
+          if (sourceZone === "todo") return; // already todo
+          if (sourceZone === "done") {
+            result = await moveTicketToTodo(ticketId);
+          } else {
+            // ACTIVE → TODO not in spec, ignore
+            return;
+          }
+        } else {
+          return;
+        }
+
+        if (!result.success && result.error) {
+          setError(result.error);
+        }
+      });
+    },
+    [startTransition],
+  );
+
   return (
-    <div className="flex flex-1 overflow-hidden">
-      {/* TODO column */}
-      <TodoBacklog
-        boardId={boardId}
-        tickets={todoTickets}
-        ticketTypes={ticketTypes}
-      />
-
-      {/* ACTIVE grid */}
-      <section className="flex flex-1 flex-col">
-        <div className="border-b px-4 py-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Active
-          </h2>
-          <span className="text-xs text-muted-foreground">
-            {activeTickets.length} ticket{activeTickets.length !== 1 && "s"} ·{" "}
-            {swimlanes.length} swimlane{swimlanes.length !== 1 && "s"} ·{" "}
-            {maxSteps} steps · {refreshIntervalSeconds}s refresh
-          </span>
-        </div>
-        <ActiveGrid
-          tickets={activeTickets}
-          swimlanes={swimlanes}
-          colorRules={colorRules}
-          maxSteps={maxSteps}
-          refreshIntervalSeconds={refreshIntervalSeconds}
-          settingsHref={settingsHref}
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex flex-1 overflow-hidden">
+        {/* TODO column */}
+        <TodoBacklog
+          boardId={boardId}
+          tickets={todoTickets}
+          ticketTypes={ticketTypes}
         />
-      </section>
 
-      {/* DONE column */}
-      <DoneBucket tickets={doneTickets} />
-    </div>
+        {/* ACTIVE grid */}
+        <section className="flex flex-1 flex-col">
+          <div className="border-b px-4 py-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Active
+            </h2>
+            <span className="text-xs text-muted-foreground">
+              {activeTickets.length} ticket{activeTickets.length !== 1 && "s"} ·{" "}
+              {swimlanes.length} swimlane{swimlanes.length !== 1 && "s"} ·{" "}
+              {maxSteps} steps · {refreshIntervalSeconds}s refresh
+              {isPending && " · Saving…"}
+            </span>
+            {error && (
+              <p className="mt-1 text-xs text-destructive">{error}</p>
+            )}
+          </div>
+          <ActiveGrid
+            tickets={activeTickets}
+            swimlanes={swimlanes}
+            colorRules={colorRules}
+            maxSteps={maxSteps}
+            refreshIntervalSeconds={refreshIntervalSeconds}
+            settingsHref={settingsHref}
+          />
+        </section>
+
+        {/* DONE column */}
+        <DoneBucket tickets={doneTickets} />
+      </div>
+
+      {/* Drag overlay — renders the dragged ticket above everything */}
+      <DragOverlay dropAnimation={null}>
+        {draggedTicket ? (
+          <div className="w-64 opacity-90">
+            <TicketCard
+              ticket={draggedTicket}
+              variant={draggedTicket.zone === "done" ? "done" : "default"}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

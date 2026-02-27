@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useActionState } from "react";
 import { createTicket, type ActionState } from "@/actions/ticket";
 import { TicketCard } from "@/components/ticket-card";
+import { DraggableTicket } from "@/components/draggable-ticket";
+import { DroppableZone } from "@/components/droppable-zone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -107,20 +109,27 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
           </form>
         )}
 
-        <div className="space-y-2">
-          {tickets.map((ticket) => (
-            <TicketCard
-              key={ticket.id}
-              ticket={ticket}
-              onClick={onTicketClick ? () => onTicketClick(ticket.id) : undefined}
-            />
-          ))}
-          {tickets.length === 0 && !isCreating && (
-            <p className="py-8 text-center text-xs text-muted-foreground">
-              No todo tickets
-            </p>
-          )}
-        </div>
+        <DroppableZone id="todo-zone" data={{ zone: "todo" }} className="min-h-[100px]">
+          <div className="space-y-2">
+            {tickets.map((ticket) => (
+              <DraggableTicket
+                key={ticket.id}
+                id={ticket.id}
+                data={{ ticketId: ticket.id, sourceZone: "todo" }}
+              >
+                <TicketCard
+                  ticket={ticket}
+                  onClick={onTicketClick ? () => onTicketClick(ticket.id) : undefined}
+                />
+              </DraggableTicket>
+            ))}
+            {tickets.length === 0 && !isCreating && (
+              <p className="py-8 text-center text-xs text-muted-foreground">
+                No todo tickets
+              </p>
+            )}
+          </div>
+        </DroppableZone>
       </div>
     </section>
   );

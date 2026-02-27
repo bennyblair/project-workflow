@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { computeStepIndex, assignSwimlane, evaluateColorRules } from "@/lib/engine";
 import type { FilterContext } from "@/lib/engine";
 import type { ColorContext } from "@/lib/engine";
+import { DraggableTicket } from "@/components/draggable-ticket";
+import { DroppableZone } from "@/components/droppable-zone";
 
 type ActiveTicket = {
   id: string;
@@ -201,49 +203,61 @@ export function ActiveGrid({
           {/* Cells */}
           {swimlanes.map((lane) => {
             const cell = grid.get(`${lane.id}:${stepIdx}`);
+            const cellId = `active-${lane.id}-${stepIdx}`;
             return (
-              <div
+              <DroppableZone
                 key={lane.id}
+                id={cellId}
+                data={{ zone: "active", swimlaneId: lane.id, stepIndex: stepIdx }}
                 className="border-l p-1.5"
               >
                 {cell && cell.tickets.length > 0 && (
                   <div className="space-y-1.5">
                     {cell.tickets.map((ticket) => (
-                      <div
+                      <DraggableTicket
                         key={ticket.id}
-                        className="rounded-md border p-2 shadow-sm transition-all duration-500 ease-in-out"
-                        style={{
-                          borderLeftColor: ticket.resolvedColor,
-                          borderLeftWidth: "3px",
+                        id={ticket.id}
+                        data={{
+                          ticketId: ticket.id,
+                          sourceZone: "active",
+                          sourceSwimlaneId: lane.id,
                         }}
                       >
-                        <div className="mb-0.5 flex items-center gap-1.5">
-                          <span
-                            className="inline-block h-2 w-2 rounded-full"
-                            style={{ backgroundColor: ticket.resolvedColor }}
-                          />
-                          <span className="text-[10px] font-semibold text-muted-foreground">
-                            {ticket.type.key}
-                          </span>
-                          {ticket.team && (
-                            <span className="ml-auto text-[10px] text-muted-foreground">
-                              {ticket.team.name}
+                        <div
+                          className="rounded-md border p-2 shadow-sm transition-all duration-500 ease-in-out"
+                          style={{
+                            borderLeftColor: ticket.resolvedColor,
+                            borderLeftWidth: "3px",
+                          }}
+                        >
+                          <div className="mb-0.5 flex items-center gap-1.5">
+                            <span
+                              className="inline-block h-2 w-2 rounded-full"
+                              style={{ backgroundColor: ticket.resolvedColor }}
+                            />
+                            <span className="text-[10px] font-semibold text-muted-foreground">
+                              {ticket.type.key}
                             </span>
+                            {ticket.team && (
+                              <span className="ml-auto text-[10px] text-muted-foreground">
+                                {ticket.team.name}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs font-medium leading-snug">
+                            {ticket.title}
+                          </p>
+                          {ticket.assignee && (
+                            <p className="mt-0.5 text-[10px] text-muted-foreground">
+                              {ticket.assignee.name}
+                            </p>
                           )}
                         </div>
-                        <p className="text-xs font-medium leading-snug">
-                          {ticket.title}
-                        </p>
-                        {ticket.assignee && (
-                          <p className="mt-0.5 text-[10px] text-muted-foreground">
-                            {ticket.assignee.name}
-                          </p>
-                        )}
-                      </div>
+                      </DraggableTicket>
                     ))}
                   </div>
                 )}
-              </div>
+              </DroppableZone>
             );
           })}
         </div>
