@@ -40,7 +40,7 @@ function buildFilterCtx(
   };
 }
 
-/** Compute orderKey at the end of a given status bucket (optionally filtered by swimlane). */
+/** Compute orderKey at the end of a given status bucket. */
 async function nextOrderKey(boardId: string, status: "TODO" | "ACTIVE" | "DONE"): Promise<number> {
   const last = await prisma.ticket.findFirst({
     where: { boardId, status },
@@ -87,9 +87,14 @@ export async function moveTicketToActive(
     const ctx = buildFilterCtx(ticket, { ...patch, status: "ACTIVE" });
     const expr = swimlane.filterExprJson as FilterExpr;
     if (!evaluateFilter(expr, ctx)) {
+      // Build a detailed error listing which fields the user could fix
+      const patchFields = Object.keys(patch);
+      const fieldHint = patchFields.length > 0
+        ? ` The patch sets: ${patchFields.map((k) => `${k}=${JSON.stringify(patch[k])}`).join(", ")}.`
+        : " This swimlane has no onDropPatch configured — add one in Settings.";
       return {
         success: false,
-        error: `Ticket would not match swimlane "${swimlane.name}" filter after applying patch`,
+        error: `Ticket would not match swimlane "${swimlane.name}" filter after applying patch.${fieldHint} Check the swimlane filter expression in Settings.`,
       };
     }
   }
@@ -159,9 +164,13 @@ export async function moveActiveToSwimlane(
     const ctx = buildFilterCtx(ticket, patch);
     const expr = swimlane.filterExprJson as FilterExpr;
     if (!evaluateFilter(expr, ctx)) {
+      const patchFields = Object.keys(patch);
+      const fieldHint = patchFields.length > 0
+        ? ` The patch sets: ${patchFields.map((k) => `${k}=${JSON.stringify(patch[k])}`).join(", ")}.`
+        : " This swimlane has no onDropPatch configured — add one in Settings.";
       return {
         success: false,
-        error: `Ticket would not match swimlane "${swimlane.name}" filter after applying patch`,
+        error: `Ticket would not match swimlane "${swimlane.name}" filter after applying patch.${fieldHint} Check the swimlane filter expression in Settings.`,
       };
     }
   }

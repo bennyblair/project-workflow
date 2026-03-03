@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
@@ -91,6 +92,15 @@ export function BoardShell({
   const [error, setError] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Auto-refresh board data from server on interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, refreshIntervalSeconds * 1000);
+    return () => clearInterval(interval);
+  }, [router, refreshIntervalSeconds]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),

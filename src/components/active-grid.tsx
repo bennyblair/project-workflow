@@ -79,6 +79,8 @@ function buildColorContext(ticket: ActiveTicket, stepIndex: number): ColorContex
   };
 }
 
+const UNMATCHED_LANE_ID = "__unmatched__";
+
 export function ActiveGrid({
   tickets,
   swimlanes,
@@ -90,8 +92,9 @@ export function ActiveGrid({
 }: Props) {
   const computeGrid = useCallback(() => {
     const cells = new Map<string, GridCell>();
+    let hasUnmatched = false;
 
-    // Initialize all cells
+    // Initialize all cells for defined swimlanes
     for (const lane of swimlanes) {
       for (let step = 0; step < maxSteps; step++) {
         const key = `${lane.id}:${step}`;
@@ -108,8 +111,19 @@ export function ActiveGrid({
       );
 
       const filterCtx = buildFilterContext(ticket);
-      const laneId = assignSwimlane(swimlanes, filterCtx);
-      if (!laneId) continue; // unmatched — would need auto "Unmatched" lane
+      let laneId = assignSwimlane(swimlanes, filterCtx);
+
+      // Auto "Unmatched" lane for tickets matching no swimlane
+      if (!laneId) {
+        laneId = UNMATCHED_LANE_ID;
+        if (!hasUnmatched) {
+          hasUnmatched = true;
+          for (let step = 0; step < maxSteps; step++) {
+            const key = `${UNMATCHED_LANE_ID}:${step}`;
+            cells.set(key, { swimlaneId: UNMATCHED_LANE_ID, stepIndex: step, tickets: [] });
+          }
+        }
+      }
 
       const colorCtx = buildColorContext(ticket, stepIndex);
       const resolvedColor = evaluateColorRules(
@@ -125,15 +139,15 @@ export function ActiveGrid({
       }
     }
 
-    return cells;
+    return { cells, hasUnmatched };
   }, [tickets, swimlanes, colorRules, maxSteps]);
 
-  const [grid, setGrid] = useState(() => computeGrid());
+  const [gridState, setGridState] = useState(() => computeGrid());
   const [tick, setTick] = useState(0);
 
   // Recompute grid on every tick
   useEffect(() => {
-    setGrid(computeGrid());
+    setGridState(computeGrid());
   }, [computeGrid, tick]);
 
   // Client-side refresh interval
@@ -144,7 +158,17 @@ export function ActiveGrid({
     return () => clearInterval(interval);
   }, [refreshIntervalSeconds]);
 
-  if (swimlanes.length === 0) {
+  const { cells: grid, hasUnmatched } = gridState;
+
+  // Build effective columns: swimlanes + optional Unmatched
+  const effectiveLanes = [
+    ...swimlanes,
+    ...(hasUnmatched
+      ? [{ id: UNMATCHED_LANE_ID, name: "Unmatched", order: 999, isCatchAll: false, filterExprJson: {} as unknown }]
+      : []),
+  ];
+
+  if (swimlanes.length === 0 && !hasUnmatched) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-sm text-muted-foreground">
@@ -157,6 +181,8 @@ export function ActiveGrid({
     );
   }
 
+  const colCount = effectiveLanes.length;
+
   // Rows: maxSteps-1 at top (oldest) → 0 at bottom (newest)
   const rowIndices = Array.from({ length: maxSteps }, (_, i) => maxSteps - 1 - i);
 
@@ -166,13 +192,13 @@ export function ActiveGrid({
       <div
         className="sticky top-0 z-10 grid border-b bg-background"
         style={{
-          gridTemplateColumns: `4rem repeat(${swimlanes.length}, minmax(180px, 1fr))`,
+          gridTemplateColumns: `4rem repeat(${colCount}, minmax(180px, 1fr))`,
         }}
       >
         <div className="px-2 py-2 text-center text-xs font-semibold text-muted-foreground">
           Step
         </div>
-        {swimlanes.map((lane) => (
+        {effectiveLanes.map((lane) => (
           <div
             key={lane.id}
             className="border-l px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground"
@@ -181,6 +207,11 @@ export function ActiveGrid({
             {lane.isCatchAll && (
               <span className="ml-1 text-[10px] font-normal opacity-60">
                 (catch-all)
+              </span>
+            )}
+            {lane.id === UNMATCHED_LANE_ID && (
+              <span className="ml-1 text-[10px] font-normal text-amber-500">
+                (auto)
               </span>
             )}
           </div>
@@ -193,7 +224,7 @@ export function ActiveGrid({
           key={stepIdx}
           className="grid border-b transition-all duration-500 ease-in-out"
           style={{
-            gridTemplateColumns: `4rem repeat(${swimlanes.length}, minmax(180px, 1fr))`,
+            gridTemplateColumns: `4rem repeat(${colCount}, minmax(180px, 1fr))`,
             minHeight: "3.5rem",
           }}
         >
@@ -203,7 +234,7 @@ export function ActiveGrid({
           </div>
 
           {/* Cells */}
-          {swimlanes.map((lane) => {
+          {effectiveLanes.map((lane) => {
             const cell = grid.get(`${lane.id}:${stepIdx}`);
             const cellId = `active-${lane.id}-${stepIdx}`;
             return (
@@ -213,7 +244,7 @@ export function ActiveGrid({
                 data={{ zone: "active", swimlaneId: lane.id, stepIndex: stepIdx }}
                 className="border-l p-1.5"
               >
-                {cell && cell.tickets.length > 0 && (
+                {cell && cell.tickets.length > 0 ? (
                   <div className="space-y-1.5">
                     {cell.tickets.map((ticket) => (
                       <DraggableTicket
@@ -258,6 +289,12 @@ export function ActiveGrid({
                         </div>
                       </DraggableTicket>
                     ))}
+                  </div>
+                ) : (
+                  <div className="flex h-full min-h-[2rem] items-center justify-center rounded border border-dashed border-muted-foreground/20">
+                    <span className="text-[10px] text-muted-foreground/30">
+                      drop
+                    </span>
                   </div>
                 )}
               </DroppableZone>

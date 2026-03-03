@@ -17,7 +17,7 @@ type Props = {
 
 export function DoneBucket({ tickets, onTicketClick }: Props) {
   return (
-    <section className="flex w-72 flex-shrink-0 flex-col border-l bg-muted/30">
+    <section className="flex w-64 flex-shrink-0 flex-col border-l bg-muted/30 md:w-72">
       <div className="border-b px-4 py-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Done
@@ -44,7 +44,11 @@ export function DoneBucket({ tickets, onTicketClick }: Props) {
             ))}
             {tickets.length === 0 && (
               <p className="py-8 text-center text-xs text-muted-foreground">
-                No completed tickets
+                No completed tickets.
+                <br />
+                <span className="text-[10px] opacity-60">
+                  Drag active tickets here to mark done.
+                </span>
               </p>
             )}
           </div>

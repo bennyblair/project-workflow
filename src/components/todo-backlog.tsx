@@ -45,7 +45,7 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
   );
 
   return (
-    <section className="flex w-72 flex-shrink-0 flex-col border-r bg-muted/30">
+    <section className="flex w-64 flex-shrink-0 flex-col border-r bg-muted/30 md:w-72">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -125,7 +125,11 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
             ))}
             {tickets.length === 0 && !isCreating && (
               <p className="py-8 text-center text-xs text-muted-foreground">
-                No todo tickets
+                No todo tickets.
+                <br />
+                <span className="text-[10px] opacity-60">
+                  Click &quot;+ New&quot; to create one.
+                </span>
               </p>
             )}
           </div>

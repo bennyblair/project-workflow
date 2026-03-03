@@ -75,13 +75,13 @@ Check off items as they are completed.
 - [x] "Advanced JSON" textarea toggle on filter/rule editors
 - [x] Zod validation on all settings mutations
 
-## Milestone 8: Polish & Edge Cases
-- [ ] Unmatched swimlane: auto-provided for tickets matching no swimlane filter
-- [ ] Error handling: helpful messages when onDropPatch fails filter validation
-- [ ] Board auto-refresh after mutations (revalidate + interval)
-- [ ] orderKey float insertion logic (midpoint between neighbors)
-- [ ] Empty states for all lists/grids
-- [ ] Responsive layout basics
+## Milestone 8: Polish & Edge Cases ✅
+- [x] Unmatched swimlane: auto-provided for tickets matching no swimlane filter
+- [x] Error handling: helpful messages when onDropPatch fails filter validation
+- [x] Board auto-refresh after mutations (revalidate + interval)
+- [x] orderKey float insertion logic (midpoint between neighbors)
+- [x] Empty states for all lists/grids
+- [x] Responsive layout basics
 
 ## Milestone 9: Playwright Smoke Tests
 - [ ] Set up Playwright config
