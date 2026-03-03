@@ -49,6 +49,8 @@ Three sections:
 - When a ticket first enters ACTIVE: set startedAt = now. createdAt is immutable.
 - Movement speed is PER TICKET TYPE:
   - Each TicketType has stepIntervalSeconds.
+  - **Minimum step interval is 1 hour (3600 seconds).** The UI and validation must enforce this.
+  - Settings UI displays hours (not raw seconds) for step interval configuration.
 - Compute stepIndex for rendering:
   - if status != ACTIVE: stepIndex = null
   - else stepIndex = clamp(floor((now - startedAt) / stepIntervalSeconds), 0, maxSteps-1)
@@ -65,8 +67,9 @@ Three sections:
 - Allowed actions:
   1) TODO -> ACTIVE:
      - Drop a TODO ticket into a swimlane column on ACTIVE grid.
+     - **Smart swimlane snap**: If the ticket already has an assignment (teamId, assigneeId, or typeId) that matches an existing swimlane filter, the server IGNORES the drop-target swimlane and instead places the ticket in its correct swimlane (the first swimlane whose filter matches the ticket's current fields). If the ticket is unassigned (no fields match any swimlane), the drop-target swimlane's onDropPatch is applied as normal.
      - Server updates: status=ACTIVE, startedAt=now
-     - Also apply swimlane.onDropPatch (see swimlanes) to set fields like type/team/assignee.
+     - Also apply swimlane.onDropPatch (see swimlanes) to set fields like type/team/assignee — only when smart snap does not override.
   2) ACTIVE -> ACTIVE:
      - Drag horizontally into another swimlane column.
      - Server updates: apply swimlane.onDropPatch (do NOT change startedAt)
@@ -78,9 +81,25 @@ Three sections:
      - Server updates: status=TODO, startedAt=null, doneAt=null
   5) DONE -> ACTIVE:
      - Server updates: status=ACTIVE, startedAt=now, doneAt=null
+     - **Smart swimlane snap** also applies (same logic as TODO → ACTIVE).
 - Ordering:
   - Use orderKey (float) for stable ordering within a list/cell and easy inserts.
   - Only applies within the same (status, swimlane, stepIndex) view.
+
+## SMART SWIMLANE SNAP (DETAILED)
+When a ticket enters the ACTIVE grid (from TODO or DONE):
+1. Build a FilterContext from the ticket's current fields (before any patch).
+2. Evaluate all swimlanes in order to find the first match.
+3. If a match is found (ticket already belongs to a swimlane based on its existing fields):
+   - Place the ticket in that swimlane. Do NOT apply the drop-target's onDropPatch.
+   - The user's drop location is overridden — the ticket "snaps" to its correct lane.
+4. If no match is found (ticket is unassigned / doesn't match any lane):
+   - Apply the drop-target swimlane's onDropPatch as before.
+   - Validate the ticket now matches the target swimlane's filter.
+
+This enables two UX patterns:
+- **Unassigned tickets**: Drop into "Frontend" lane → ticket gets teamId set → appears in Frontend.
+- **Pre-assigned tickets**: Ticket already has teamId=Frontend → drop anywhere on board → it automatically snaps to the Frontend swimlane.
 
 ## SWIMLANES (COLUMNS) — FILTERS + PATCHES
 Goal:
@@ -253,7 +272,7 @@ Tabs:
   - Prisma migrations
   - Seed:
     - 2 boards
-    - types with different speeds (e.g. Bug=60s, Task=180s, Feature=300s for easy demo)
+    - types with different speeds (e.g. Bug=3600s (1hr), Task=7200s (2hr), Feature=14400s (4hr))
     - people/teams
     - swimlanes (e.g. "Bugs", "Ben", "Team A", "Unmatched")
     - color rules examples

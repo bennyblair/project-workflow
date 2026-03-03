@@ -55,11 +55,12 @@ function TicketTypeRow({ tt }: { tt: TicketType }) {
         <Input
           name="stepIntervalSeconds"
           type="number"
-          min={1}
+          min={3600}
+          step={3600}
           defaultValue={tt.stepIntervalSeconds}
           className="h-8 w-24 text-sm"
         />
-        <span className="text-xs text-muted-foreground">s/step</span>
+        <span className="text-xs text-muted-foreground">s/step ({(tt.stepIntervalSeconds / 3600).toFixed(1)}h)</span>
         <div className="ml-auto flex gap-1">
           <Button type="submit" size="sm" variant="default" disabled={isUpdating}>
             {isUpdating ? "…" : "Save"}
@@ -84,7 +85,7 @@ function TicketTypeRow({ tt }: { tt: TicketType }) {
       <span className="font-medium">{tt.name}</span>
       <span className="text-xs text-muted-foreground">{tt.key}</span>
       <span className="ml-auto text-xs text-muted-foreground">
-        {tt.stepIntervalSeconds}s per step
+        {(tt.stepIntervalSeconds / 3600).toFixed(1)}h per step ({tt.stepIntervalSeconds}s)
       </span>
       <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
         Edit
@@ -139,8 +140,9 @@ export function TicketTypesTab({ boardId, ticketTypes }: Props) {
               <Input name="defaultColorHex" type="color" defaultValue="#6366f1" className="h-8 w-16 cursor-pointer p-0.5" />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium">Step Interval (s)</label>
-              <Input name="stepIntervalSeconds" type="number" min={1} defaultValue={180} className="h-8 text-sm" />
+              <label className="text-xs font-medium">Step Interval (hours)</label>
+              <Input name="stepIntervalSeconds" type="number" min={3600} step={3600} defaultValue={3600} className="h-8 text-sm" />
+              <p className="text-xs text-muted-foreground">Value in seconds (min 3600 = 1 hour)</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

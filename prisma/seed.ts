@@ -33,7 +33,7 @@ async function main() {
         name: "Bug",
         key: "BUG",
         defaultColorHex: "#ef4444",
-        stepIntervalSeconds: 60,
+        stepIntervalSeconds: 3600,
       },
     }),
     prisma.ticketType.create({
@@ -42,7 +42,7 @@ async function main() {
         name: "Task",
         key: "TASK",
         defaultColorHex: "#6366f1",
-        stepIntervalSeconds: 180,
+        stepIntervalSeconds: 7200,
       },
     }),
     prisma.ticketType.create({
@@ -51,7 +51,7 @@ async function main() {
         name: "Feature",
         key: "FEAT",
         defaultColorHex: "#22c55e",
-        stepIntervalSeconds: 300,
+        stepIntervalSeconds: 14400,
       },
     }),
   ]);
@@ -63,7 +63,7 @@ async function main() {
         name: "Bug",
         key: "BUG",
         defaultColorHex: "#ef4444",
-        stepIntervalSeconds: 90,
+        stepIntervalSeconds: 5400,
       },
     }),
     prisma.ticketType.create({
@@ -72,7 +72,7 @@ async function main() {
         name: "Task",
         key: "TASK",
         defaultColorHex: "#8b5cf6",
-        stepIntervalSeconds: 120,
+        stepIntervalSeconds: 3600,
       },
     }),
   ]);

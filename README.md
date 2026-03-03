@@ -108,23 +108,30 @@ cp .env.example .env
 
 ### Timer-Based Movement
 
-Movement speed is **per ticket type** (not global). Each `TicketType` has a `stepIntervalSeconds` setting:
+Movement speed is **per ticket type** (not global). Each `TicketType` has a `stepIntervalSeconds` setting with a **minimum of 1 hour (3600 seconds)**:
 
 ```
 stepIndex = floor((now - startedAt) / stepIntervalSeconds)
 ```
 
-Tickets at `stepIndex >= maxSteps - 1` stay in the top row (oldest). The client refreshes on `board.refreshIntervalSeconds` to recompute positions — no server cron needed.
+Tickets at `stepIndex >= maxSteps - 1` stay in the top row (oldest). The client refreshes on `board.refreshIntervalSeconds` to recompute positions — no server cron needed. The settings UI displays intervals in hours for clarity.
 
 ### Drag & Drop Flows
 
 | Flow | Action |
 |---|---|
-| TODO → ACTIVE cell | Set status=ACTIVE, startedAt=now, apply `onDropPatch` |
+| TODO → ACTIVE cell | Set status=ACTIVE, startedAt=now. **Smart snap**: if ticket already matches a swimlane, it snaps there; otherwise `onDropPatch` is applied from the drop target. |
 | ACTIVE → ACTIVE (cross-swimlane) | Apply target swimlane's `onDropPatch`, keep `startedAt` |
 | ACTIVE → DONE | Set status=DONE, doneAt=now |
 | DONE → TODO | Set status=TODO, clear startedAt/doneAt |
-| DONE → ACTIVE | Set status=ACTIVE, startedAt=now (timer restarts) |
+| DONE → ACTIVE | Set status=ACTIVE, startedAt=now (timer restarts). **Smart snap** also applies. |
+
+### Smart Swimlane Snap
+
+When a ticket enters the ACTIVE grid (from TODO or DONE), the server checks whether the ticket's **existing fields** (teamId, assigneeId, typeId, etc.) already match a swimlane filter:
+
+- **Pre-assigned tickets**: If a match is found, the ticket automatically "snaps" to the correct swimlane — regardless of where the user dropped it. No `onDropPatch` is applied.
+- **Unassigned tickets**: If no swimlane matches, the drop-target swimlane's `onDropPatch` is applied as before, assigning the ticket to the target lane.
 
 ### Swimlane Filters
 
@@ -219,5 +226,7 @@ The smoke tests cover the full lifecycle: create board → create ticket → dra
 4. **No audit logging of automatic movement** — only human-initiated actions (drag, edit, create) are logged.
 5. **Swimlane assignment is filter-based** — tickets are assigned to swimlanes by evaluating filter expressions, not by explicit assignment. The `onDropPatch` mechanism bridges the gap when dropping.
 6. **orderKey float precision** — ticket ordering uses float-based `orderKey` values with midpoint insertion. This works well for thousands of reorders but may need rebalancing in a long-lived production system.
-7. **Local PostgreSQL only** — the app expects a local Postgres instance via Docker. No cloud database configuration is provided.
-8. **No real-time collaboration** — changes by one user are not pushed to other users. The auto-refresh interval provides eventual consistency for a single-user POC.
+7. **1-hour minimum step intervals** — `stepIntervalSeconds` must be ≥ 3600 (1 hour). Sub-hour intervals are not supported. This keeps the board manageable and ensures meaningful time-based progression.
+8. **Smart swimlane snap** — when tickets enter ACTIVE with pre-existing field values that match a swimlane filter, they automatically snap to the correct lane regardless of where the user dropped them.
+9. **Local PostgreSQL only** — the app expects a local Postgres instance via Docker. No cloud database configuration is provided.
+10. **No real-time collaboration** — changes by one user are not pushed to other users. The auto-refresh interval provides eventual consistency for a single-user POC.

@@ -68,7 +68,7 @@ export async function createTicketType(
     name: formData.get("name"),
     key: formData.get("key"),
     defaultColorHex: formData.get("defaultColorHex") || "#6366f1",
-    stepIntervalSeconds: formData.get("stepIntervalSeconds") || "180",
+    stepIntervalSeconds: formData.get("stepIntervalSeconds") || "3600",
   });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };

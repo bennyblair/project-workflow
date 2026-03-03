@@ -98,3 +98,21 @@ Check off items as they are completed.
 - [x] Document all MVP assumptions in README
 - [x] Clean up unused code, ensure consistent TypeScript strict mode
 - [x] Final review of all zod schemas and audit event coverage
+
+## Milestone 11: Smart Swimlane Snap ✅
+- [x] Update `moveTicketToActive` to detect pre-assigned tickets (teamId/assigneeId/typeId matching a lane filter)
+- [x] If ticket already matches a swimlane, snap to that lane instead of applying drop-target's onDropPatch
+- [x] If ticket is unassigned (no lane match), fall back to existing onDropPatch behavior
+- [x] Same logic for DONE → ACTIVE (reopen) path
+- [x] Add audit event noting the snap (SWIMLANE_DROPPED with snap indicator)
+- [x] Update SPEC.md with smart snap rules
+- [x] Update README with smart snap behavior
+- [x] Verify existing Playwright tests still pass
+
+## Milestone 12: 1-Hour Minimum Step Intervals ✅
+- [x] Update Zod schemas: min(3600) for stepIntervalSeconds (create + update)
+- [x] Update settings UI: display as hours, enforce minimum 1 hour
+- [x] Update seed data: use 3600/5400/7200/10800/14400 instead of 60/90/120/180/300
+- [x] Update SPEC.md with minimum interval requirement
+- [x] Update README documentation
+- [x] Verify typecheck + build pass

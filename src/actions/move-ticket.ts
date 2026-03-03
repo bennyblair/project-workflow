@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { evaluateFilter } from "@/lib/engine/filter-evaluator";
+import { evaluateFilter, assignSwimlane } from "@/lib/engine/filter-evaluator";
 import type { FilterExpr, FilterContext } from "@/lib/engine/filter-evaluator";
 
 // ---------------------------------------------------------------------------
@@ -68,13 +68,40 @@ export async function moveTicketToActive(
     return moveActiveToSwimlane(ticketId, targetSwimlaneId);
   }
 
-  const swimlane = await prisma.swimlane.findUnique({
-    where: { id: targetSwimlaneId },
+  // ── Smart Swimlane Snap ──────────────────────────────────────────────────
+  // Check if the ticket already matches a swimlane based on current fields.
+  // If so, snap to that lane instead of applying the drop-target's onDropPatch.
+  const allSwimlanes = await prisma.swimlane.findMany({
+    where: { boardId: ticket.boardId },
+    orderBy: { order: "asc" },
+    select: { id: true, name: true, filterExprJson: true, isCatchAll: true, onDropPatchJson: true },
   });
-  if (!swimlane) return { success: false, error: "Swimlane not found" };
 
-  // Build the data update: status, startedAt, clear doneAt, apply onDropPatch
-  const patch = (swimlane.onDropPatchJson ?? {}) as Record<string, unknown>;
+  const ticketCtx = buildFilterCtx(ticket, { status: "ACTIVE" });
+  const matchedLaneId = assignSwimlane(
+    allSwimlanes.filter((l) => !l.isCatchAll), // exclude catch-all from smart snap
+    ticketCtx,
+  );
+
+  // Determine which swimlane to use and whether to apply a patch
+  let effectiveSwimlane: typeof allSwimlanes[number] | undefined;
+  let patch: Record<string, unknown> = {};
+  let snapped = false;
+
+  if (matchedLaneId) {
+    // Ticket already matches a lane — snap to it, no patch needed
+    effectiveSwimlane = allSwimlanes.find((l) => l.id === matchedLaneId);
+    snapped = true;
+  } else {
+    // Ticket doesn't match any lane — use the drop-target and apply its onDropPatch
+    effectiveSwimlane = allSwimlanes.find((l) => l.id === targetSwimlaneId);
+    if (!effectiveSwimlane) return { success: false, error: "Swimlane not found" };
+    patch = (effectiveSwimlane.onDropPatchJson ?? {}) as Record<string, unknown>;
+  }
+
+  if (!effectiveSwimlane) return { success: false, error: "Swimlane not found" };
+
+  // Build the data update: status, startedAt, clear doneAt, optionally apply onDropPatch
   const updateData: Record<string, unknown> = {
     ...patch,
     status: "ACTIVE",
@@ -82,19 +109,18 @@ export async function moveTicketToActive(
     doneAt: null,
   };
 
-  // Validate that the ticket will match the target swimlane filter after patching
-  if (!swimlane.isCatchAll) {
+  // Validate that the ticket will match the effective swimlane filter after patching
+  if (!effectiveSwimlane.isCatchAll && !snapped) {
     const ctx = buildFilterCtx(ticket, { ...patch, status: "ACTIVE" });
-    const expr = swimlane.filterExprJson as FilterExpr;
+    const expr = effectiveSwimlane.filterExprJson as FilterExpr;
     if (!evaluateFilter(expr, ctx)) {
-      // Build a detailed error listing which fields the user could fix
       const patchFields = Object.keys(patch);
       const fieldHint = patchFields.length > 0
         ? ` The patch sets: ${patchFields.map((k) => `${k}=${JSON.stringify(patch[k])}`).join(", ")}.`
         : " This swimlane has no onDropPatch configured — add one in Settings.";
       return {
         success: false,
-        error: `Ticket would not match swimlane "${swimlane.name}" filter after applying patch.${fieldHint} Check the swimlane filter expression in Settings.`,
+        error: `Ticket would not match swimlane "${effectiveSwimlane.name}" filter after applying patch.${fieldHint} Check the swimlane filter expression in Settings.`,
       };
     }
   }
@@ -114,21 +140,34 @@ export async function moveTicketToActive(
         dataJson: { from: fromStatus, to: "ACTIVE" },
       },
     }),
-    // If onDropPatch changed swimlane-relevant fields, add SWIMLANE_DROPPED audit
-    ...(Object.keys(patch).length > 0
+    // Audit: record swimlane assignment (either snap or patch)
+    ...(snapped
       ? [
           prisma.auditEvent.create({
             data: {
               ticketId,
               type: "SWIMLANE_DROPPED",
               dataJson: {
-                swimlaneName: swimlane.name,
-                patch: JSON.parse(JSON.stringify(patch)) as Record<string, string>,
+                swimlaneName: effectiveSwimlane.name,
+                snapped: true,
               },
             },
           }),
         ]
-      : []),
+      : Object.keys(patch).length > 0
+        ? [
+            prisma.auditEvent.create({
+              data: {
+                ticketId,
+                type: "SWIMLANE_DROPPED",
+                dataJson: {
+                  swimlaneName: effectiveSwimlane.name,
+                  patch: JSON.parse(JSON.stringify(patch)) as Record<string, string>,
+                },
+              },
+            }),
+          ]
+        : []),
   ]);
 
   revalidatePath(`/board/${ticket.boardId}`);
