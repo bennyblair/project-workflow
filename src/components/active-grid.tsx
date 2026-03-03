@@ -41,6 +41,7 @@ type Props = {
   maxSteps: number;
   refreshIntervalSeconds: number;
   settingsHref: string;
+  onTicketClick?: (ticketId: string) => void;
 };
 
 type GridCell = {
@@ -85,6 +86,7 @@ export function ActiveGrid({
   maxSteps,
   refreshIntervalSeconds,
   settingsHref,
+  onTicketClick,
 }: Props) {
   const computeGrid = useCallback(() => {
     const cells = new Map<string, GridCell>();
@@ -224,11 +226,12 @@ export function ActiveGrid({
                         }}
                       >
                         <div
-                          className="rounded-md border p-2 shadow-sm transition-all duration-500 ease-in-out"
+                          className="rounded-md border p-2 shadow-sm transition-all duration-500 ease-in-out cursor-pointer hover:border-ring"
                           style={{
                             borderLeftColor: ticket.resolvedColor,
                             borderLeftWidth: "3px",
                           }}
+                          onClick={() => onTicketClick?.(ticket.id)}
                         >
                           <div className="mb-0.5 flex items-center gap-1.5">
                             <span

@@ -58,12 +58,12 @@ Check off items as they are completed.
 - [x] Audit events: STATUS_CHANGED, SWIMLANE_DROPPED, ORDER_CHANGED
 
 ## Milestone 6: Ticket Detail Panel
-- [ ] Right-side slide-out panel on ticket click
-- [ ] Tab 1 — Overview: title, status, type, assignee, team, timestamps
-- [ ] Tab 2 — Description: markdown editor + preview
-- [ ] Tab 3 — Attachments: placeholder UI ("Attachments coming soon", disabled button)
-- [ ] Tab 4 — Details: audit log timeline (chronological list of human actions)
-- [ ] Inline editing of ticket fields from panel, wired to `updateTicketFields`
+- [x] Right-side slide-out panel on ticket click
+- [x] Tab 1 — Overview: title, status, type, assignee, team, timestamps
+- [x] Tab 2 — Description: markdown editor + preview
+- [x] Tab 3 — Attachments: placeholder UI ("Attachments coming soon", disabled button)
+- [x] Tab 4 — Details: audit log timeline (chronological list of human actions)
+- [x] Inline editing of ticket fields from panel, wired to `updateTicketFields`
 
 ## Milestone 7: Settings UI & Rule Builders
 - [ ] Settings Tab 1 — Board: edit maxSteps, refreshIntervalSeconds

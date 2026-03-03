@@ -14,6 +14,7 @@ import { TodoBacklog } from "@/components/todo-backlog";
 import { DoneBucket } from "@/components/done-bucket";
 import { ActiveGrid } from "@/components/active-grid";
 import { TicketCard } from "@/components/ticket-card";
+import { TicketDetailPanel } from "@/components/ticket-detail-panel";
 import type { DragData } from "@/components/draggable-ticket";
 import type { DropZoneData } from "@/components/droppable-zone";
 import {
@@ -89,6 +90,7 @@ export function BoardShell({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -181,6 +183,7 @@ export function BoardShell({
           boardId={boardId}
           tickets={todoTickets}
           ticketTypes={ticketTypes}
+          onTicketClick={setSelectedTicketId}
         />
 
         {/* ACTIVE grid */}
@@ -206,11 +209,12 @@ export function BoardShell({
             maxSteps={maxSteps}
             refreshIntervalSeconds={refreshIntervalSeconds}
             settingsHref={settingsHref}
+            onTicketClick={setSelectedTicketId}
           />
         </section>
 
         {/* DONE column */}
-        <DoneBucket tickets={doneTickets} />
+        <DoneBucket tickets={doneTickets} onTicketClick={setSelectedTicketId} />
       </div>
 
       {/* Drag overlay — renders the dragged ticket above everything */}
@@ -224,6 +228,12 @@ export function BoardShell({
           </div>
         ) : null}
       </DragOverlay>
+
+      {/* Ticket detail slide-out panel */}
+      <TicketDetailPanel
+        ticketId={selectedTicketId}
+        onClose={() => setSelectedTicketId(null)}
+      />
     </DndContext>
   );
 }
