@@ -245,7 +245,7 @@ export function ActiveGrid({
                 className="border-l p-1.5"
               >
                 {cell && cell.tickets.length > 0 ? (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5" data-testid={`grid-cell-${lane.id}-${stepIdx}`}>
                     {cell.tickets.map((ticket) => (
                       <DraggableTicket
                         key={ticket.id}
@@ -257,6 +257,7 @@ export function ActiveGrid({
                         }}
                       >
                         <div
+                          data-testid={`active-ticket-${ticket.id}`}
                           className="rounded-md border p-2 shadow-sm transition-all duration-500 ease-in-out cursor-pointer hover:border-ring"
                           style={{
                             borderLeftColor: ticket.resolvedColor,

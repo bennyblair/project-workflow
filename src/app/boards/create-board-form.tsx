@@ -11,15 +11,16 @@ export function CreateBoardForm() {
   const [state, formAction, isPending] = useActionState(createBoard, initialState);
 
   return (
-    <form action={formAction} className="flex gap-3">
+    <form action={formAction} className="flex gap-3" data-testid="create-board-form">
       <Input
         name="name"
         placeholder="New board name…"
         required
         maxLength={100}
         className="max-w-xs"
+        data-testid="board-name-input"
       />
-      <Button type="submit" disabled={isPending}>
+      <Button type="submit" disabled={isPending} data-testid="create-board-submit">
         {isPending ? "Creating…" : "Create Board"}
       </Button>
       {state.error && (

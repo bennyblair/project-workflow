@@ -45,7 +45,7 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
   );
 
   return (
-    <section className="flex w-64 flex-shrink-0 flex-col border-r bg-muted/30 md:w-72">
+    <section className="flex w-64 flex-shrink-0 flex-col border-r bg-muted/30 md:w-72" data-testid="todo-backlog">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -59,6 +59,7 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
           variant="ghost"
           size="sm"
           onClick={() => setIsCreating(!isCreating)}
+          data-testid="new-ticket-btn"
         >
           {isCreating ? "Cancel" : "+ New"}
         </Button>
@@ -66,7 +67,7 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
 
       <div className="flex-1 overflow-y-auto p-3">
         {isCreating && (
-          <form action={formAction} className="mb-3 space-y-2 rounded-lg border bg-card p-3">
+          <form action={formAction} className="mb-3 space-y-2 rounded-lg border bg-card p-3" data-testid="create-ticket-form">
             <input type="hidden" name="boardId" value={boardId} />
             <Input
               name="title"
@@ -75,6 +76,7 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
               maxLength={200}
               autoFocus
               className="h-8 text-sm"
+              data-testid="ticket-title-input"
             />
             {ticketTypes.length > 0 && (
               <select

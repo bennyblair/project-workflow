@@ -16,6 +16,7 @@ export function TicketCard({ ticket, variant = "default", onClick }: TicketCardP
   return (
     <div
       onClick={onClick}
+      data-testid={`ticket-card-${ticket.id}`}
       className={`rounded-lg border bg-card p-3 shadow-sm transition-colors ${
         isDone ? "opacity-60" : ""
       } ${onClick ? "cursor-pointer hover:border-ring" : ""}`}

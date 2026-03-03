@@ -17,7 +17,7 @@ type Props = {
 
 export function DoneBucket({ tickets, onTicketClick }: Props) {
   return (
-    <section className="flex w-64 flex-shrink-0 flex-col border-l bg-muted/30 md:w-72">
+    <section className="flex w-64 flex-shrink-0 flex-col border-l bg-muted/30 md:w-72" data-testid="done-bucket">
       <div className="border-b px-4 py-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Done

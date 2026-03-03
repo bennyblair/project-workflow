@@ -21,6 +21,7 @@ export function DroppableZone({ id, data, children, className }: Props) {
   return (
     <div
       ref={setNodeRef}
+      data-testid={`drop-zone-${id}`}
       className={`${className ?? ""} ${
         isOver ? "bg-accent/40 ring-2 ring-ring/30" : ""
       } transition-colors duration-150`}

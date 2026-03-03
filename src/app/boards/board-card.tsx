@@ -33,7 +33,7 @@ export function BoardCard({ board }: BoardCardProps) {
   const [, deleteAction, isDeleting] = useActionState(deleteBoard, initialState);
 
   return (
-    <Card className="relative">
+    <Card className="relative" data-testid={`board-card-${board.id}`}>
       <CardHeader>
         {isEditing ? (
           <form action={renameAction} className="flex gap-2">
@@ -63,7 +63,7 @@ export function BoardCard({ board }: BoardCardProps) {
           </form>
         ) : (
           <>
-            <Link href={`/board/${board.id}`}>
+            <Link href={`/board/${board.id}`} data-testid={`board-link-${board.id}`}>
               <CardTitle className="hover:underline">{board.name}</CardTitle>
             </Link>
             <CardDescription>

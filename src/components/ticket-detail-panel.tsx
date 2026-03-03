@@ -63,7 +63,7 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
 
   return (
     <Sheet open={!!ticketId} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent>
+      <SheetContent data-testid="ticket-detail-panel">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
             <p className="text-sm text-muted-foreground">Loading…</p>

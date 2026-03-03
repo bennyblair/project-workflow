@@ -83,15 +83,15 @@ Check off items as they are completed.
 - [x] Empty states for all lists/grids
 - [x] Responsive layout basics
 
-## Milestone 9: Playwright Smoke Tests
-- [ ] Set up Playwright config
-- [ ] Test: create board
-- [ ] Test: create ticket in TODO
-- [ ] Test: drag TODO ticket into ACTIVE swimlane → appears in grid
-- [ ] Test: open ticket detail panel → audit event visible
-- [ ] Test: drag ACTIVE ticket to DONE → appears in DONE bucket
-- [ ] Test: drag DONE back to ACTIVE → startedAt resets, ticket at bottom row
-- [ ] CI-ready test script
+## Milestone 9: Playwright Smoke Tests ✅
+- [x] Set up Playwright config
+- [x] Test: create board
+- [x] Test: create ticket in TODO
+- [x] Test: drag TODO ticket into ACTIVE swimlane → appears in grid
+- [x] Test: open ticket detail panel → audit event visible
+- [x] Test: drag ACTIVE ticket to DONE → appears in DONE bucket
+- [x] Test: drag DONE back to ACTIVE → startedAt resets, ticket at bottom row
+- [x] CI-ready test script
 
 ## Milestone 10: Documentation & Cleanup
 - [ ] README with full setup instructions (pnpm i, docker compose, migrate, seed, dev)
