@@ -66,14 +66,14 @@ Check off items as they are completed.
 - [x] Inline editing of ticket fields from panel, wired to `updateTicketFields`
 
 ## Milestone 7: Settings UI & Rule Builders
-- [ ] Settings Tab 1 — Board: edit maxSteps, refreshIntervalSeconds
-- [ ] Settings Tab 2 — Ticket Types: CRUD list + stepIntervalSeconds per type
-- [ ] Settings Tab 3 — Swimlanes: CRUD + visual filter expression builder (AND/OR nested) + onDropPatch editor
-- [ ] Settings Tab 4 — Color Rules: CRUD ordered list + visual expression builder
-- [ ] Settings Tab 5 — People & Teams: CRUD
-- [ ] Visual rule builder component: add conditions, group as AND/OR, nested
-- [ ] "Advanced JSON" textarea toggle on filter/rule editors
-- [ ] Zod validation on all settings mutations
+- [x] Settings Tab 1 — Board: edit maxSteps, refreshIntervalSeconds
+- [x] Settings Tab 2 — Ticket Types: CRUD list + stepIntervalSeconds per type
+- [x] Settings Tab 3 — Swimlanes: CRUD + visual filter expression builder (AND/OR nested) + onDropPatch editor
+- [x] Settings Tab 4 — Color Rules: CRUD ordered list + visual expression builder
+- [x] Settings Tab 5 — People & Teams: CRUD
+- [x] Visual rule builder component: add conditions, group as AND/OR, nested
+- [x] "Advanced JSON" textarea toggle on filter/rule editors
+- [x] Zod validation on all settings mutations
 
 ## Milestone 8: Polish & Edge Cases
 - [ ] Unmatched swimlane: auto-provided for tickets matching no swimlane filter
