@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { CreateBoardForm } from "./create-board-form";
 import { BoardCard } from "./board-card";
 
+export const dynamic = "force-dynamic";
+
 export default async function BoardsPage() {
   const boards = await prisma.board.findMany({
     orderBy: { createdAt: "desc" },

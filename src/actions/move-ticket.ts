@@ -278,6 +278,8 @@ export async function moveTicketToTodo(
 
 // ---------------------------------------------------------------------------
 // reorderTicket — update orderKey for within-cell reordering
+// Ready for use when drag-to-reorder UI is added within grid cells.
+// Use midpointOrderKey() from @/lib/engine to compute the new orderKey.
 // ---------------------------------------------------------------------------
 
 export async function reorderTicket(

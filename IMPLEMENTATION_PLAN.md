@@ -93,8 +93,8 @@ Check off items as they are completed.
 - [x] Test: drag DONE back to ACTIVE → startedAt resets, ticket at bottom row
 - [x] CI-ready test script
 
-## Milestone 10: Documentation & Cleanup
-- [ ] README with full setup instructions (pnpm i, docker compose, migrate, seed, dev)
-- [ ] Document all MVP assumptions in README
-- [ ] Clean up unused code, ensure consistent TypeScript strict mode
-- [ ] Final review of all zod schemas and audit event coverage
+## Milestone 10: Documentation & Cleanup ✅
+- [x] README with full setup instructions (pnpm i, docker compose, migrate, seed, dev)
+- [x] Document all MVP assumptions in README
+- [x] Clean up unused code, ensure consistent TypeScript strict mode
+- [x] Final review of all zod schemas and audit event coverage
