@@ -9,7 +9,7 @@
 
 export type FilterCondition = {
   field: string;
-  operator: "EQ" | "NEQ" | "CONTAINS" | "NOT_CONTAINS" | "IN";
+  operator: string;
   value: string | string[];
 };
 
@@ -55,7 +55,7 @@ function evaluateCondition(
   const fieldValue = ctx[cond.field];
   const target = cond.value;
 
-  switch (cond.operator) {
+  switch (cond.operator.toUpperCase()) {
     case "EQ":
       return String(fieldValue ?? "") === String(target);
     case "NEQ":
