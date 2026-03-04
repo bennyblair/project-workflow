@@ -12,7 +12,7 @@ Check off items as they are completed.
 - [x] Create `.env.example` with DATABASE_URL
 - [x] Set up Prisma ORM, define full schema (all models from spec)
 - [ ] Generate and run initial Prisma migration *(requires Postgres)*
-- [x] Create seed script with 2 boards, types (Bug 60s, Task 180s, Feature 300s), people, teams, swimlanes, color rules, and tickets across TODO/ACTIVE/DONE
+- [x] Create seed script with 2 boards, types (Bug 1hr, Task 2hr, Feature 4hr), people, teams, swimlanes, color rules, and tickets across TODO/ACTIVE/DONE
 - [x] Add pnpm scripts: `dev`, `build`, `prisma:migrate`, `prisma:seed`
 - [ ] Verify: `docker compose up -d && pnpm prisma:migrate && pnpm prisma:seed && pnpm dev` works end-to-end *(requires Postgres)*
 
@@ -34,7 +34,7 @@ Check off items as they are completed.
 - [x] Audit events: TICKET_CREATED, TITLE_UPDATED, DESCRIPTION_UPDATED, TYPE_CHANGED, ASSIGNEE_CHANGED, TEAM_CHANGED
 
 ## Milestone 4: Board Rendering & Timer-Based Movement
-- [x] Implement `computeStepIndex(startedAt, stepIntervalSeconds, maxSteps)` utility
+- [x] Implement `computeStepIndex(startedAt, stepIntervalHours, maxSteps)` utility
 - [x] Implement swimlane filter evaluator (AND/OR expression tree)
 - [x] Implement color rule evaluator (AND/OR with stepIndex support)
 - [x] ACTIVE grid component: columns = swimlanes, rows = time lanes (0..maxSteps-1)
@@ -67,7 +67,7 @@ Check off items as they are completed.
 
 ## Milestone 7: Settings UI & Rule Builders
 - [x] Settings Tab 1 — Board: edit maxSteps, refreshIntervalSeconds
-- [x] Settings Tab 2 — Ticket Types: CRUD list + stepIntervalSeconds per type
+- [x] Settings Tab 2 — Ticket Types: CRUD list + stepIntervalHours per type
 - [x] Settings Tab 3 — Swimlanes: CRUD + visual filter expression builder (AND/OR nested) + onDropPatch editor
 - [x] Settings Tab 4 — Color Rules: CRUD ordered list + visual expression builder
 - [x] Settings Tab 5 — People & Teams: CRUD
@@ -110,9 +110,9 @@ Check off items as they are completed.
 - [x] Verify existing Playwright tests still pass
 
 ## Milestone 12: 1-Hour Minimum Step Intervals ✅
-- [x] Update Zod schemas: min(3600) for stepIntervalSeconds (create + update)
+- [x] Update Zod schemas: min(1) max(24) for stepIntervalHours (create + update)
 - [x] Update settings UI: display as hours, enforce minimum 1 hour
-- [x] Update seed data: use 3600/5400/7200/10800/14400 instead of 60/90/120/180/300
+- [x] Update seed data: use 1/2/4 hour intervals
 - [x] Update SPEC.md with minimum interval requirement
 - [x] Update README documentation
 - [x] Verify typecheck + build pass
@@ -142,3 +142,30 @@ Check off items as they are completed.
 - [x] Update Playwright smoke tests for project-based flow
 - [x] Update SPEC.md, README, IMPLEMENTATION_PLAN
 - [x] Verify typecheck + all Playwright tests pass
+
+## Milestone 15: Step Interval Hours Rename ✅
+- [x] Rename `stepIntervalSeconds` → `stepIntervalHours` across schema, Zod, actions, UI, engine
+- [x] Update Prisma schema: `stepIntervalHours Int @default(1)`
+- [x] Update step-index engine: multiply hours × 3600 for seconds internally
+- [x] Update settings UI: input min=1, max=24, step=1, label "Hours per step"
+- [x] Update seed data: Bug=1, Task=2, Feature=4 (hours)
+- [x] Verify typecheck + all Playwright tests pass
+
+## Milestone 16: Swimlane Filter Case-Insensitive Fix ✅
+- [x] Fix `evaluateCondition` in filter-evaluator.ts: operators stored as lowercase in DB but switch matched uppercase
+- [x] Add `.toUpperCase()` to `cond.operator` before switch evaluation
+- [x] Change `FilterCondition.operator` type from union to `string` for flexibility
+- [x] Verify cross-swimlane drag-and-drop works correctly
+- [x] All Playwright tests passing
+
+## Milestone 17: Parent-Child Ticket Relationships ✅
+- [x] Prisma schema: self-referential `parentId` on Ticket, `PARENT_CHANGED` audit event type
+- [x] Zod schema: `parentId` field in `updateTicketFieldsSchema`
+- [x] Server action: `updateTicketFields` handles parentId with `PARENT_CHANGED` audit
+- [x] Server action: `searchTickets(projectId, query, excludeTicketId)` for parent search
+- [x] `getTicketDetail` includes parent, children, and projectId
+- [x] Dialog UI component (radix-ui/react-dialog)
+- [x] LinkParentDialog: debounced search, type badge, status pill, board name
+- [x] Ticket detail panel: ParentSection (view/link/unlink), children list
+- [x] Seed data: dark mode feature as parent of CSS bug and login bug
+- [x] All 6 Playwright tests passing

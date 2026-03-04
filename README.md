@@ -107,19 +107,19 @@ cp .env.example .env
 ```
 
 - **TODO** — vertical backlog list; drag to ACTIVE to start the timer
-- **ACTIVE** — grid with columns = swimlanes, rows = time steps (0 = newest at bottom, maxSteps-1 = oldest at top). Tickets auto-advance rows based on `TicketType.stepIntervalSeconds`. Rows have a **color gradient**: green (step 0) → yellow (middle) → red (oldest).
+- **ACTIVE** — grid with columns = swimlanes, rows = time steps (0 = newest at bottom, maxSteps-1 = oldest at top). Tickets auto-advance rows based on `TicketType.stepIntervalHours`. Rows have a **color gradient**: green (step 0) → yellow (middle) → red (oldest).
 - **DONE** — completed tickets; drag back to ACTIVE to reopen (resets `startedAt`)
 - **Board title** is centered in the header bar
 
 ### Timer-Based Movement
 
-Movement speed is **per ticket type** (not global). Each `TicketType` has a `stepIntervalSeconds` setting with a **minimum of 1 hour (3600 seconds)**:
+Movement speed is **per ticket type** (not global). Each `TicketType` has a `stepIntervalHours` setting (integer, **1–24 hours**):
 
 ```
-stepIndex = floor((now - startedAt) / stepIntervalSeconds)
+stepIndex = floor((now - startedAt) / (stepIntervalHours × 3600))
 ```
 
-Tickets at `stepIndex >= maxSteps - 1` stay in the top row (oldest). The client refreshes on `board.refreshIntervalSeconds` to recompute positions — no server cron needed. The settings UI displays intervals in hours for clarity.
+Tickets at `stepIndex >= maxSteps - 1` stay in the top row (oldest). The client refreshes on `board.refreshIntervalSeconds` to recompute positions — no server cron needed. The settings UI displays intervals in hours.
 
 ### Drag & Drop Flows
 
@@ -137,6 +137,14 @@ When a ticket enters the ACTIVE grid (from TODO or DONE), the server checks whet
 
 - **Pre-assigned tickets**: If a match is found, the ticket automatically "snaps" to the correct swimlane — regardless of where the user dropped it. No `onDropPatch` is applied.
 - **Unassigned tickets**: If no swimlane matches, the drop-target swimlane's `onDropPatch` is applied as before, assigning the ticket to the target lane.
+
+### Parent-Child Ticket Relationships
+
+Tickets can have a **parent** ticket (optional, self-referential). A parent can have multiple children.
+
+- **Ticket detail panel** shows the parent (if linked) with a link to view it and an "Unlink" button, plus a list of child tickets.
+- **Link Parent** button opens a search dialog that queries all tickets within the same project by title.
+- Setting or removing a parent generates a `PARENT_CHANGED` audit event.
 
 ### Swimlane Filters
 
@@ -170,6 +178,7 @@ All human actions are logged (automatic timer movement is not):
 | `TYPE_CHANGED` | Changing ticket type |
 | `ASSIGNEE_CHANGED` | Changing assignee |
 | `TEAM_CHANGED` | Changing team |
+| `PARENT_CHANGED` | Linking or unlinking a parent ticket |
 | `SWIMLANE_DROPPED` | Drop that applies `onDropPatch` |
 | `ORDER_CHANGED` | Reordering within a cell |
 
@@ -177,7 +186,7 @@ All human actions are logged (automatic timer movement is not):
 
 ```
 src/
-├── actions/               # Server actions (board, project, ticket, move-ticket, settings)
+├── actions/               # Server actions (board, project, ticket, move-ticket, settings, search-tickets, ticket-detail)
 ├── app/
 │   ├── board/[boardId]/   # Board page + BoardShell client component
 │   ├── boards/            # Home page: projects + boards, create forms
@@ -187,14 +196,15 @@ src/
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Landing redirect → /boards
 ├── components/
-│   ├── ui/                # shadcn/ui primitives (button, input, card, sheet, tabs, label)
+│   ├── ui/                # shadcn/ui primitives (button, input, card, sheet, tabs, label, dialog)
 │   ├── active-grid.tsx    # ACTIVE grid with swimlane columns × time rows
 │   ├── done-bucket.tsx    # DONE column
 │   ├── draggable-ticket.tsx # dnd-kit draggable wrapper
 │   ├── droppable-zone.tsx # dnd-kit droppable wrapper
 │   ├── expression-builder.tsx # Visual AND/OR filter rule builder
+│   ├── link-parent-dialog.tsx # Search & select parent ticket dialog
 │   ├── ticket-card.tsx    # Ticket card rendering
-│   ├── ticket-detail-panel.tsx # Slide-out detail panel
+│   ├── ticket-detail-panel.tsx # Slide-out detail panel (with parent/children)
 │   └── todo-backlog.tsx   # TODO column + create ticket form
 ├── lib/
 │   ├── engine/            # Pure functions: step-index, filter-evaluator, color-evaluator, order-key
@@ -233,7 +243,8 @@ The smoke tests cover the full lifecycle: create board → create ticket → dra
 4. **No audit logging of automatic movement** — only human-initiated actions (drag, edit, create) are logged.
 5. **Swimlane assignment is filter-based** — tickets are assigned to swimlanes by evaluating filter expressions, not by explicit assignment. The `onDropPatch` mechanism bridges the gap when dropping.
 6. **orderKey float precision** — ticket ordering uses float-based `orderKey` values with midpoint insertion. This works well for thousands of reorders but may need rebalancing in a long-lived production system.
-7. **1-hour minimum step intervals** — `stepIntervalSeconds` must be ≥ 3600 (1 hour). Sub-hour intervals are not supported. This keeps the board manageable and ensures meaningful time-based progression.
+7. **1-hour minimum step intervals** — `stepIntervalHours` accepts 1–24 (hours). Sub-hour intervals are not supported. This keeps the board manageable and ensures meaningful time-based progression.
 8. **Smart swimlane snap** — when tickets enter ACTIVE with pre-existing field values that match a swimlane filter, they automatically snap to the correct lane regardless of where the user dropped them.
 9. **Local PostgreSQL only** — the app expects a local Postgres instance via Docker. No cloud database configuration is provided.
 10. **No real-time collaboration** — changes by one user are not pushed to other users. The auto-refresh interval provides eventual consistency for a single-user POC.
+11. **Parent-child is optional** — any ticket can optionally have a parent. Circular references are not enforced at the DB level (MVP limitation). Parents can be from any board within the same project.

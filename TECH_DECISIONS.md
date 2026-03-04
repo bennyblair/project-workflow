@@ -61,15 +61,15 @@ Updated as implementation progresses.
 
 ## 8. Type Change While ACTIVE
 
-**Decision:** If a ticket's `typeId` changes while status is ACTIVE, the `stepIndex` will jump because it's recomputed with the new type's `stepIntervalSeconds`. No special handling — document as MVP behavior.
+**Decision:** If a ticket's `typeId` changes while status is ACTIVE, the `stepIndex` will jump because it's recomputed with the new type's `stepIntervalHours`. No special handling — document as MVP behavior.
 
-**Example:** A ticket active for 120s with Bug (60s interval) is at stepIndex 2. If changed to Feature (300s interval), it jumps to stepIndex 0. This is expected MVP behavior.
+**Example:** A ticket active for 2 hours with Bug (1hr interval) is at stepIndex 2. If changed to Feature (4hr interval), it jumps to stepIndex 0. This is expected MVP behavior.
 
 ## 9. Audit Log Scope
 
 **Decision:** Only human-initiated actions are logged. Timer-driven stepIndex changes are NOT audit events.
 
-**Logged events:** TICKET_CREATED, STATUS_CHANGED, TITLE_UPDATED, DESCRIPTION_UPDATED, TYPE_CHANGED, ASSIGNEE_CHANGED, TEAM_CHANGED, SWIMLANE_DROPPED, ORDER_CHANGED.
+**Logged events:** TICKET_CREATED, STATUS_CHANGED, TITLE_UPDATED, DESCRIPTION_UPDATED, TYPE_CHANGED, ASSIGNEE_CHANGED, TEAM_CHANGED, PARENT_CHANGED, SWIMLANE_DROPPED, ORDER_CHANGED.
 
 **dataJson format:** Each event stores a JSON blob with `before`/`after` values where applicable (e.g., `{ "before": "TODO", "after": "ACTIVE" }` for STATUS_CHANGED).
 
@@ -176,3 +176,25 @@ project-workflow/
   "lint": "next lint"
 }
 ```
+
+## 16. Step Interval in Hours (Not Seconds)
+
+**Decision:** Renamed `stepIntervalSeconds` to `stepIntervalHours` across the entire codebase. The field stores an integer (1–24) representing hours. The engine multiplies by 3600 internally when computing stepIndex.
+
+**Rationale:** The minimum interval was already 1 hour, and users configure in hours via the UI. Storing raw seconds created a mismatch between the UI (hours) and the database (seconds). Using hours directly is simpler and less error-prone.
+
+## 17. Filter Operator Case Insensitivity
+
+**Decision:** The filter evaluator normalizes `operator` to uppercase (via `.toUpperCase()`) before the switch statement. The `FilterCondition.operator` type was changed from a strict union to `string`.
+
+**Rationale:** Swimlane filter expressions stored by the expression builder used lowercase operators (e.g., `"eq"`) while the evaluator's switch cases used uppercase (`"EQ"`). This caused cross-swimlane drag-and-drop to fail with "ticket would not match swimlane filter" errors. Normalizing to uppercase at evaluation time handles all cases.
+
+## 18. Parent-Child Ticket Relationships
+
+**Decision:** Tickets have an optional `parentId` (self-referential FK with `onDelete: SetNull`). Parent-child is a simple one-to-many relationship. No depth limit or circular reference prevention at the DB level.
+
+**Rationale:** MVP feature to support basic hierarchy (epics/stories/subtasks pattern). Circular reference prevention would require recursive queries or application-level validation — deferred to a later milestone. `onDelete: SetNull` ensures deleting a parent gracefully unlinks children rather than cascading deletion.
+
+**Search:** The `searchTickets` action queries across all boards in the project using case-insensitive title matching, limited to 20 results. This keeps the link-parent dialog responsive without complex search infrastructure.
+
+**UI:** The LinkParentDialog uses `@radix-ui/react-dialog` (same foundation as Sheet) with debounced search (300ms) to avoid excessive server calls while typing.

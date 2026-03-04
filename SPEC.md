@@ -57,19 +57,19 @@ Three sections:
 - Tickets only move when status = ACTIVE.
 - When a ticket first enters ACTIVE: set startedAt = now. createdAt is immutable.
 - Movement speed is PER TICKET TYPE:
-  - Each TicketType has stepIntervalSeconds.
-  - **Minimum step interval is 1 hour (3600 seconds).** The UI and validation must enforce this.
-  - Settings UI displays hours (not raw seconds) for step interval configuration.
+  - Each TicketType has stepIntervalHours (integer, 1–24).
+  - **Minimum step interval is 1 hour.** The UI and validation must enforce this.
+  - Settings UI displays hours directly for step interval configuration.
 - Compute stepIndex for rendering:
   - if status != ACTIVE: stepIndex = null
-  - else stepIndex = clamp(floor((now - startedAt) / stepIntervalSeconds), 0, maxSteps-1)
+  - else stepIndex = clamp(floor((now - startedAt) / (stepIntervalHours × 3600)), 0, maxSteps-1)
 - Render rows so that stepIndex 0 is bottom (newest) and maxSteps-1 is top (oldest).
 - The UI must recompute stepIndex periodically:
   - Board setting refreshIntervalSeconds (default 5)
   - Use setInterval on the client to re-render movement.
 
 ### NOTE ON TYPE CHANGES (MVP DECISION)
-- If a ticket's type changes while ACTIVE, stepIndex will be recomputed using the new type's interval (ticket may "jump" rows). Document this as an MVP assumption.
+- If a ticket's type changes while ACTIVE, stepIndex will be recomputed using the new type's stepIntervalHours (ticket may "jump" rows). Document this as an MVP assumption.
 
 ## DRAG & DROP RULES (DO NOT OVERRIDE TIME)
 - Dragging must NEVER change startedAt and must NEVER allow user to choose row directly.
@@ -163,6 +163,7 @@ Examples:
 - typeId (required)
 - assigneeId (optional)
 - teamId (optional)
+- parentId (optional, self-referential — links to another Ticket)
 - status (TODO|ACTIVE|DONE)
 - createdAt (immutable)
 - startedAt (nullable)
@@ -171,11 +172,28 @@ Examples:
 
 (Do NOT store swimlaneId on ticket for MVP; swimlane membership is derived from filters.)
 
+## PARENT-CHILD TICKET RELATIONSHIPS
+- Any ticket can have a **parent** ticket (optional, self-referential via `parentId`).
+- A parent ticket can have multiple **children** (one-to-many).
+- When viewing a ticket in the detail panel:
+  - If a parent is set, it is shown with a link to view the parent ticket and an "Unlink" button.
+  - Child tickets are listed below with type badge, title, and status.
+  - A "Link Parent" button opens a search dialog.
+- **Link Parent Dialog**:
+  - Searches tickets within the same **project** (across all boards) by title.
+  - Debounced search input (300ms).
+  - Results show type color/key, title, status badge, and board name.
+  - The current ticket is excluded from search results.
+  - Selecting a result sets it as the parent.
+- Unlinking a parent sets `parentId` to null.
+- Both link and unlink actions generate a `PARENT_CHANGED` audit event.
+
 ## TICKET DETAIL PANEL
 - Clicking a ticket opens a right-side panel with tabs:
-  1) Overview: title, status, type, assignee, team, createdAt, startedAt, doneAt, **description section** (inline editor), then **audit log timeline** below.
+  1) Overview: title, status, type, assignee, team, createdAt, startedAt, doneAt, **parent section** (view/link/unlink parent, children list), **description section** (inline editor), then **audit log timeline** below.
   2) Attachments: UI only placeholder ("Attachments coming soon"), show an "Add attachment" button disabled or no-op.
 - Description is NOT a separate tab — it lives in the Overview tab between the field rows and the audit log.
+- Parent section shows the linked parent (if any) or a "Link Parent" button. Children are listed below.
 
 ## AUDIT LOG (HUMAN ACTIONS ONLY)
 Append-only audit_events:
@@ -186,6 +204,7 @@ Append-only audit_events:
 - TYPE_CHANGED
 - ASSIGNEE_CHANGED
 - TEAM_CHANGED
+- PARENT_CHANGED (parent linked or unlinked)
 - SWIMLANE_DROPPED (ticket dragged into another swimlane)
 - ORDER_CHANGED (reordered within a list/cell)
 
@@ -203,7 +222,7 @@ No auto-move events.
 - refreshIntervalSeconds (default 5)
 
 ### TicketType
-- id, **projectId**, name, key, defaultColorHex, stepIntervalSeconds
+- id, **projectId**, name, key, defaultColorHex, stepIntervalHours (integer, 1–24, default 1)
 - Unique on **(projectId, key)** — same key can exist in different projects
 
 ### Team
@@ -228,6 +247,7 @@ No auto-move events.
 - typeId
 - assigneeId nullable
 - teamId nullable
+- parentId nullable (self-referential FK to Ticket, onDelete: SetNull)
 - status
 - orderKey (float)
 - createdAt, updatedAt
@@ -244,7 +264,8 @@ No auto-move events.
 - createProject, updateProject, deleteProject
 - createBoard(projectId, name), renameBoard, deleteBoard
 - createTicket (creates in TODO backlog; must require a typeId — show error if no ticket types exist)
-- updateTicketFields (title, description, type, assignee, team)
+- updateTicketFields (title, description, type, assignee, team, parentId)
+- searchTickets(projectId, query, excludeTicketId) — search by title across project for parent linking
 - moveTicketToActive(boardId, ticketId, targetSwimlaneId)
 - moveTicketToDone(boardId, ticketId)
 - moveTicketToTodo(boardId, ticketId)
@@ -259,7 +280,7 @@ Each mutation must:
 
 ## BOARD RENDERING
 - Load board config, swimlanes, color rules, types, teams, people, and tickets.
-- For ACTIVE tickets compute stepIndex client-side using startedAt and type.stepIntervalSeconds.
+- For ACTIVE tickets compute stepIndex client-side using startedAt and (type.stepIntervalHours × 3600).
 - Determine swimlane membership by evaluating swimlane filters in order.
 - Group tickets into:
   - TODO list
@@ -280,7 +301,7 @@ Tabs:
 ### Project Settings (/project/[projectId]/settings)
 Tabs:
 1) Project: project name
-2) Ticket Types: CRUD + stepIntervalSeconds per type (shared across all project boards)
+2) Ticket Types: CRUD + stepIntervalHours per type (shared across all project boards)
 
 ## EDITORS (MVP UI)
 - Build a simple visual rule builder:
@@ -294,7 +315,7 @@ Tabs:
   - Prisma migrations
   - Seed:
     - 1 project ("Engineering") with 2 boards
-    - Ticket types defined at **project level** with different speeds (e.g. Bug=3600s (1hr), Task=7200s (2hr), Feature=14400s (4hr))
+    - Ticket types defined at **project level** with different speeds (e.g. Bug=1hr, Task=2hr, Feature=4hr)
     - people/teams (per board)
     - swimlanes (e.g. "Bugs", "Ben", "Team A", "Unmatched")
     - color rules examples
