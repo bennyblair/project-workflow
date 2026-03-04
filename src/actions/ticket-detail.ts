@@ -14,7 +14,10 @@ export type TicketDetail = {
   type: { id: string; name: string; key: string; defaultColorHex: string };
   assignee: { id: string; name: string } | null;
   team: { id: string; name: string } | null;
+  parent: { id: string; title: string; type: { key: string; defaultColorHex: string } } | null;
+  children: { id: string; title: string; status: string; type: { key: string; defaultColorHex: string } }[];
   boardId: string;
+  projectId: string;
   events: {
     id: string;
     type: string;
@@ -36,6 +39,11 @@ export async function getTicketDetail(
       type: true,
       assignee: true,
       team: true,
+      parent: { include: { type: { select: { key: true, defaultColorHex: true } } } },
+      children: {
+        include: { type: { select: { key: true, defaultColorHex: true } } },
+        orderBy: { createdAt: "asc" },
+      },
       board: { select: { projectId: true } },
       events: { orderBy: { createdAt: "asc" } },
     },
@@ -83,7 +91,27 @@ export async function getTicketDetail(
     team: ticket.team
       ? { id: ticket.team.id, name: ticket.team.name }
       : null,
+    parent: ticket.parent
+      ? {
+          id: ticket.parent.id,
+          title: ticket.parent.title,
+          type: {
+            key: ticket.parent.type.key,
+            defaultColorHex: ticket.parent.type.defaultColorHex,
+          },
+        }
+      : null,
+    children: ticket.children.map((c) => ({
+      id: c.id,
+      title: c.title,
+      status: c.status,
+      type: {
+        key: c.type.key,
+        defaultColorHex: c.type.defaultColorHex,
+      },
+    })),
     boardId: ticket.boardId,
+    projectId: ticket.board.projectId,
     events: ticket.events.map((e) => ({
       id: e.id,
       type: e.type,

@@ -16,6 +16,7 @@ export const updateTicketFieldsSchema = z.object({
   typeId: z.string().cuid().optional(),
   assigneeId: z.string().cuid().nullable().optional(),
   teamId: z.string().cuid().nullable().optional(),
+  parentId: z.string().cuid().nullable().optional(),
 });
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;

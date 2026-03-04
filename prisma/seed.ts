@@ -190,7 +190,7 @@ async function main() {
   const now = new Date();
 
   // TODO tickets
-  await Promise.all([
+  const [loginBug, paginationTask, darkModeFeature] = await Promise.all([
     prisma.ticket.create({
       data: {
         boardId: board1.id,
@@ -227,7 +227,7 @@ async function main() {
   ]);
 
   // ACTIVE tickets (with varying startedAt for different step positions)
-  await Promise.all([
+  const [authTask, cssBug] = await Promise.all([
     prisma.ticket.create({
       data: {
         boardId: board1.id,
@@ -255,7 +255,7 @@ async function main() {
   ]);
 
   // DONE tickets
-  await prisma.ticket.create({
+  const ciTask = await prisma.ticket.create({
     data: {
       boardId: board1.id,
       title: "Set up CI pipeline",
@@ -268,6 +268,20 @@ async function main() {
       doneAt: new Date(now.getTime() - 10 * 60 * 1000),
     },
   });
+
+  // ── Parent-child relationships ──────────────────────────────────────
+  // "Implement dark mode toggle" is the parent of "Fix CSS overflow on mobile"
+  // and "Fix login redirect loop" (a feature with sub-tasks)
+  await Promise.all([
+    prisma.ticket.update({
+      where: { id: cssBug.id },
+      data: { parentId: darkModeFeature.id },
+    }),
+    prisma.ticket.update({
+      where: { id: loginBug.id },
+      data: { parentId: darkModeFeature.id },
+    }),
+  ]);
 
   // ── Tickets (Board 2) ───────────────────────────────────────────────
   await Promise.all([

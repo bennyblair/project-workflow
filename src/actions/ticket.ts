@@ -85,6 +85,8 @@ export async function updateTicketFields(
   if (assigneeId !== null) raw.assigneeId = assigneeId === "" ? null : assigneeId;
   const teamId = formData.get("teamId");
   if (teamId !== null) raw.teamId = teamId === "" ? null : teamId;
+  const parentId = formData.get("parentId");
+  if (parentId !== null) raw.parentId = parentId === "" ? null : parentId;
 
   const parsed = updateTicketFieldsSchema.safeParse(raw);
   if (!parsed.success) {
@@ -103,6 +105,7 @@ export async function updateTicketFields(
       typeId: true,
       assigneeId: true,
       teamId: true,
+      parentId: true,
     },
   });
   if (!current) {
@@ -110,7 +113,7 @@ export async function updateTicketFields(
   }
 
   // Build audit events for changed fields
-  const auditEvents: { type: "TITLE_UPDATED" | "DESCRIPTION_UPDATED" | "TYPE_CHANGED" | "ASSIGNEE_CHANGED" | "TEAM_CHANGED"; dataJson: { from: string | null; to: string | null } }[] = [];
+  const auditEvents: { type: "TITLE_UPDATED" | "DESCRIPTION_UPDATED" | "TYPE_CHANGED" | "ASSIGNEE_CHANGED" | "TEAM_CHANGED" | "PARENT_CHANGED"; dataJson: { from: string | null; to: string | null } }[] = [];
 
   if (fields.title !== undefined && fields.title !== current.title) {
     auditEvents.push({
@@ -142,6 +145,12 @@ export async function updateTicketFields(
       dataJson: { from: current.teamId, to: fields.teamId },
     });
   }
+  if (fields.parentId !== undefined && fields.parentId !== current.parentId) {
+    auditEvents.push({
+      type: "PARENT_CHANGED",
+      dataJson: { from: current.parentId, to: fields.parentId },
+    });
+  }
 
   // Only update if there are actual changes
   const updateData: Record<string, unknown> = {};
@@ -150,6 +159,7 @@ export async function updateTicketFields(
   if (fields.typeId !== undefined) updateData.typeId = fields.typeId;
   if (fields.assigneeId !== undefined) updateData.assigneeId = fields.assigneeId;
   if (fields.teamId !== undefined) updateData.teamId = fields.teamId;
+  if (fields.parentId !== undefined) updateData.parentId = fields.parentId;
 
   if (Object.keys(updateData).length > 0) {
     await prisma.$transaction([

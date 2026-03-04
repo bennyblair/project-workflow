@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getTicketDetail, type TicketDetail } from "@/actions/ticket-detail";
 import { updateTicketFields, type ActionState } from "@/actions/ticket";
+import { LinkParentDialog } from "@/components/link-parent-dialog";
 
 type Props = {
   ticketId: string | null;
@@ -287,6 +288,40 @@ function OverviewTab({
         </select>
       </FieldRow>
 
+      {/* Parent */}
+      <ParentSection
+        ticket={ticket}
+        onSave={onSave}
+        isPending={isPending}
+      />
+
+      {/* Children */}
+      {ticket.children.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Child Tickets ({ticket.children.length})
+          </h3>
+          <div className="space-y-1">
+            {ticket.children.map((child) => (
+              <div
+                key={child.id}
+                className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm"
+              >
+                <span
+                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: child.type.defaultColorHex }}
+                />
+                <span className="font-medium text-muted-foreground">
+                  {child.type.key}
+                </span>
+                <span className="truncate flex-1">{child.title}</span>
+                <StatusBadge status={child.status} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Timestamps */}
       <div className="mt-6 space-y-2 border-t pt-4">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -345,6 +380,80 @@ function FieldRow({
       </span>
       <div className="flex-1">{children}</div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Parent Section — link/unlink parent ticket with search dialog
+// ---------------------------------------------------------------------------
+
+function ParentSection({
+  ticket,
+  onSave,
+  isPending,
+}: {
+  ticket: TicketDetail;
+  onSave: (fd: FormData) => void;
+  isPending: boolean;
+}) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleLinkParent = (parentId: string) => {
+    const fd = new FormData();
+    fd.set("parentId", parentId);
+    onSave(fd);
+  };
+
+  const handleUnlinkParent = () => {
+    const fd = new FormData();
+    fd.set("parentId", "");
+    onSave(fd);
+  };
+
+  return (
+    <>
+      <FieldRow label="Parent">
+        {ticket.parent ? (
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: ticket.parent.type.defaultColorHex }}
+            />
+            <span className="text-xs font-medium text-muted-foreground">
+              {ticket.parent.type.key}
+            </span>
+            <span className="truncate text-sm">{ticket.parent.title}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-6 px-1.5 text-xs text-destructive"
+              onClick={handleUnlinkParent}
+              disabled={isPending}
+            >
+              Unlink
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            onClick={() => setDialogOpen(true)}
+            disabled={isPending}
+          >
+            + Link Parent
+          </Button>
+        )}
+      </FieldRow>
+
+      <LinkParentDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        projectId={ticket.projectId}
+        ticketId={ticket.id}
+        onSelect={handleLinkParent}
+      />
+    </>
   );
 }
 
@@ -486,6 +595,7 @@ const EVENT_LABELS: Record<string, string> = {
   TYPE_CHANGED: "Type changed",
   ASSIGNEE_CHANGED: "Assignee changed",
   TEAM_CHANGED: "Team changed",
+  PARENT_CHANGED: "Parent changed",
   SWIMLANE_DROPPED: "Moved to swimlane",
   ORDER_CHANGED: "Reordered",
 };

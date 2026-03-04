@@ -163,7 +163,7 @@ test.describe.serial("FlowLine smoke tests", () => {
     // The detail panel should slide open
     const panel = page.getByTestId("ticket-detail-panel");
     await expect(panel).toBeVisible({ timeout: 5_000 });
-    await expect(panel.getByRole("heading", { name: ticketTitle })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: ticketTitle })).toBeVisible({ timeout: 5_000 });
 
     // Audit events are visible on the Overview tab (no tab switch needed)
     await expect(panel.getByText("Ticket Created")).toBeVisible({ timeout: 5_000 });
