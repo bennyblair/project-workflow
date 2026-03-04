@@ -31,17 +31,20 @@ Reopen:
 - If reopened to ACTIVE, startedAt resets to now (time restarts).
 
 ## MULTI-BOARD
-- /boards page lists boards and allows create.
+- /boards page lists boards and allows create. Board cards show Open and Settings buttons only — **no rename or delete** on the home page (these actions live in /settings/[boardId]).
 - /board/[boardId] is the main board view.
-- /settings/[boardId] configures that board.
+- /settings/[boardId] configures that board (including rename and delete).
 
 ## BOARD LAYOUT (MAIN VIEW)
+Header: board name is **centered** in the header bar, with a back button on the left and settings on the right.
+
 Three sections:
 1) LEFT: TODO backlog list (vertical list of ticket cards)
 2) CENTER: ACTIVE grid
    - Columns = Swimlanes (customizable definitions using filters)
    - Rows = Time lanes (horizontal) computed by time steps (0..maxSteps-1)
    - Top row = oldest, bottom row = newest
+   - **Step rows have a color gradient**: step 0 (bottom, newest) = green, middle steps = yellow, last step (top, oldest) = red. The gradient is applied as a subtle row background.
 3) RIGHT: DONE bucket list
 
 ## TIME / AUTO-MOVEMENT (MOST IMPORTANT)
@@ -164,10 +167,9 @@ Examples:
 
 ## TICKET DETAIL PANEL
 - Clicking a ticket opens a right-side panel with tabs:
-  1) Overview: title, status, type, assignee, team, createdAt, startedAt, doneAt
-  2) Description: markdown editor + preview
-  3) Attachments: UI only placeholder ("Attachments coming soon"), show an "Add attachment" button disabled or no-op.
-  4) Details: audit log timeline
+  1) Overview: title, status, type, assignee, team, createdAt, startedAt, doneAt, **description section** (inline editor), then **audit log timeline** below.
+  2) Attachments: UI only placeholder ("Attachments coming soon"), show an "Add attachment" button disabled or no-op.
+- Description is NOT a separate tab — it lives in the Overview tab between the field rows and the audit log.
 
 ## AUDIT LOG (HUMAN ACTIONS ONLY)
 Append-only audit_events:
@@ -229,7 +231,7 @@ No auto-move events.
 
 ## SERVER ACTIONS / MUTATIONS (Next.js)
 - createBoard, renameBoard, deleteBoard
-- createTicket (creates in TODO backlog)
+- createTicket (creates in TODO backlog; must require a typeId — show error if no ticket types exist)
 - updateTicketFields (title, description, type, assignee, team)
 - moveTicketToActive(boardId, ticketId, targetSwimlaneId)
 - moveTicketToDone(boardId, ticketId)
@@ -256,7 +258,7 @@ Each mutation must:
 Tabs:
 1) Board: maxSteps, refreshIntervalSeconds
 2) Ticket Types: CRUD + stepIntervalSeconds
-3) Swimlanes: CRUD + filter editor + onDropPatch editor
+3) Swimlanes: CRUD + filter editor + onDropPatch editor + **drag-and-drop reordering** (order reflects on the board)
 4) Color Rules: CRUD ordered list + expression editor
 5) People & Teams: CRUD
 

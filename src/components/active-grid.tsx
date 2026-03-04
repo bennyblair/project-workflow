@@ -81,6 +81,19 @@ function buildColorContext(ticket: ActiveTicket, stepIndex: number): ColorContex
 
 const UNMATCHED_LANE_ID = "__unmatched__";
 
+/**
+ * Compute a row background color on a green → yellow → red gradient.
+ * step 0 (newest) = green, middle = yellow, maxSteps-1 (oldest) = red.
+ * Returns an rgba color with low opacity for a subtle tint.
+ */
+function stepRowColor(stepIndex: number, maxSteps: number): string {
+  if (maxSteps <= 1) return "rgba(239, 68, 68, 0.08)"; // single step = red
+  const t = stepIndex / (maxSteps - 1); // 0 = newest (green), 1 = oldest (red)
+  // Green (120°) → Yellow (60°) → Red (0°)
+  const hue = 120 * (1 - t);
+  return `hsla(${hue}, 80%, 50%, 0.07)`;
+}
+
 export function ActiveGrid({
   tickets,
   swimlanes,
@@ -226,6 +239,7 @@ export function ActiveGrid({
           style={{
             gridTemplateColumns: `4rem repeat(${colCount}, minmax(180px, 1fr))`,
             minHeight: "3.5rem",
+            backgroundColor: stepRowColor(stepIdx, maxSteps),
           }}
         >
           {/* Row label */}

@@ -106,21 +106,11 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
             <Tabs defaultValue="overview" className="flex flex-1 flex-col">
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="description">Description</TabsTrigger>
                 <TabsTrigger value="attachments">Attachments</TabsTrigger>
-                <TabsTrigger value="details">Details</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="p-4">
+              <TabsContent value="overview" className="flex-1 overflow-y-auto p-4">
                 <OverviewTab
-                  ticket={ticket}
-                  onSave={handleFieldSave}
-                  isPending={isPending}
-                />
-              </TabsContent>
-
-              <TabsContent value="description" className="p-4">
-                <DescriptionTab
                   ticket={ticket}
                   onSave={handleFieldSave}
                   isPending={isPending}
@@ -129,10 +119,6 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
 
               <TabsContent value="attachments" className="p-4">
                 <AttachmentsTab />
-              </TabsContent>
-
-              <TabsContent value="details" className="p-4">
-                <AuditLogTab events={ticket.events} />
               </TabsContent>
             </Tabs>
           </>
@@ -331,6 +317,16 @@ function OverviewTab({
           </FieldRow>
         )}
       </div>
+
+      {/* Description */}
+      <DescriptionSection
+        ticket={ticket}
+        onSave={onSave}
+        isPending={isPending}
+      />
+
+      {/* Audit Log */}
+      <AuditLogSection events={ticket.events} />
     </div>
   );
 }
@@ -353,10 +349,10 @@ function FieldRow({
 }
 
 // ---------------------------------------------------------------------------
-// Description Tab — markdown editor + preview
+// Description Section — inline in overview tab
 // ---------------------------------------------------------------------------
 
-function DescriptionTab({
+function DescriptionSection({
   ticket,
   onSave,
   isPending,
@@ -381,7 +377,7 @@ function DescriptionTab({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="mt-6 space-y-3 border-t pt-4">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Description
@@ -479,7 +475,7 @@ function AttachmentsTab() {
 }
 
 // ---------------------------------------------------------------------------
-// Audit Log Tab (Details)
+// Audit Log Section — inline in overview tab
 // ---------------------------------------------------------------------------
 
 const EVENT_LABELS: Record<string, string> = {
@@ -494,21 +490,23 @@ const EVENT_LABELS: Record<string, string> = {
   ORDER_CHANGED: "Reordered",
 };
 
-function AuditLogTab({
+function AuditLogSection({
   events,
 }: {
   events: { id: string; type: string; dataJson: unknown; createdAt: string }[];
 }) {
   if (events.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-muted-foreground">
-        No audit events yet
-      </p>
+      <div className="mt-6 border-t pt-4">
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          No audit events yet
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-0">
+    <div className="mt-6 space-y-0 border-t pt-4">
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Activity
       </h3>

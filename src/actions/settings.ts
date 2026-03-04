@@ -277,6 +277,30 @@ export async function deleteSwimlane(
   return { success: true };
 }
 
+/**
+ * Reorder swimlanes by updating each swimlane's `order` field.
+ * Accepts an ordered array of swimlane IDs.
+ */
+export async function reorderSwimlanes(
+  boardId: string,
+  orderedIds: string[],
+): Promise<ActionState> {
+  if (orderedIds.length === 0) return { success: true };
+
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.swimlane.update({
+        where: { id },
+        data: { order: index },
+      }),
+    ),
+  );
+
+  revalidatePath(`/settings/${boardId}`);
+  revalidatePath(`/board/${boardId}`);
+  return { success: true };
+}
+
 // ── Color Rules ─────────────────────────────────────────────────────────────
 
 export async function createColorRule(

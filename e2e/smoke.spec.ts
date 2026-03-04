@@ -149,10 +149,7 @@ test.describe.serial("FlowLine smoke tests", () => {
     await expect(panel).toBeVisible({ timeout: 5_000 });
     await expect(panel.getByRole("heading", { name: ticketTitle })).toBeVisible();
 
-    // Switch to "Details" (audit log) tab
-    await panel.getByRole("tab", { name: "Details" }).click();
-
-    // Should see TICKET_CREATED and STATUS_CHANGED events
+    // Audit events are visible on the Overview tab (no tab switch needed)
     await expect(panel.getByText("Ticket Created")).toBeVisible({ timeout: 5_000 });
     await expect(panel.getByText("Status Changed")).toBeVisible();
     await expect(panel.getByText("TODO → ACTIVE")).toBeVisible();
@@ -216,7 +213,7 @@ test.describe.serial("FlowLine smoke tests", () => {
     const panel = page.getByTestId("ticket-detail-panel");
     await expect(panel).toBeVisible({ timeout: 5_000 });
 
-    await panel.getByRole("tab", { name: "Details" }).click();
+    // Audit events are visible on the Overview tab (no tab switch needed)
     const statusEvents = panel.getByText("Status Changed");
     await expect(statusEvents.first()).toBeVisible({ timeout: 5_000 });
 

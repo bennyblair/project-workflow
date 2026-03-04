@@ -72,14 +72,12 @@ export default async function BoardPage({ params }: { params: Params }) {
     <div className="flex h-screen flex-col">
       {/* Header */}
       <header className="flex items-center justify-between border-b px-6 py-3">
-        <div className="flex items-center gap-4">
-          <Link href="/boards">
-            <Button variant="ghost" size="sm">
-              ← Boards
-            </Button>
-          </Link>
-          <h1 className="text-xl font-semibold">{board.name}</h1>
-        </div>
+        <Link href="/boards">
+          <Button variant="ghost" size="sm">
+            ← Boards
+          </Button>
+        </Link>
+        <h1 className="text-xl font-semibold">{board.name}</h1>
         <Link href={`/settings/${board.id}`}>
           <Button variant="ghost" size="sm">
             Settings

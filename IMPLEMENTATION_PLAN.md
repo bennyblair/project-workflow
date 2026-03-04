@@ -116,3 +116,13 @@ Check off items as they are completed.
 - [x] Update SPEC.md with minimum interval requirement
 - [x] Update README documentation
 - [x] Verify typecheck + build pass
+
+## Milestone 13: UI/UX Polish & Refinements ✅
+- [x] Center board name in board page header
+- [x] Remove delete and rename buttons from board cards on /boards home page
+- [x] Add step row color gradient: green (step 0) → yellow (middle) → red (last step)
+- [x] Fix ticket creation bug: handle missing typeId when no ticket types exist
+- [x] Swimlane drag-and-drop reordering in settings (with server action to persist order)
+- [x] Move description + audit log into Overview tab (remove separate Description and Details tabs)
+- [x] Update SPEC.md, README, IMPLEMENTATION_PLAN
+- [x] Verify typecheck + Playwright tests pass

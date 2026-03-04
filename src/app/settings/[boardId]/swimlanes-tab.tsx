@@ -1,10 +1,27 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useActionState, useTransition } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   createSwimlane,
   updateSwimlane,
   deleteSwimlane,
+  reorderSwimlanes,
   type ActionState,
 } from "@/actions/settings";
 import { ExpressionBuilder } from "@/components/expression-builder";
@@ -27,9 +44,24 @@ type Props = {
 
 const initialState: ActionState = { success: false };
 
-// ── Swimlane Row ────────────────────────────────────────────────────────────
+// ── Sortable Swimlane Row ────────────────────────────────────────────────────────────
 
-function SwimlaneRow({ lane }: { lane: Swimlane }) {
+function SortableSwimlaneRow({ lane }: { lane: Swimlane }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition: sortTransition,
+    isDragging,
+  } = useSortable({ id: lane.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: sortTransition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [filterExpr, setFilterExpr] = useState<unknown>(lane.filterExprJson);
   const [patchJson, setPatchJson] = useState(
@@ -51,7 +83,8 @@ function SwimlaneRow({ lane }: { lane: Swimlane }) {
 
   if (isEditing) {
     return (
-      <form
+      <div ref={setNodeRef} style={style}>
+        <form
         action={(fd) => {
           fd.set("filterExprJson", JSON.stringify(filterExpr));
           fd.set("onDropPatchJson", patchJson);
@@ -115,11 +148,34 @@ function SwimlaneRow({ lane }: { lane: Swimlane }) {
           )}
         </div>
       </form>
+      </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border p-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 rounded-lg border p-3"
+    >
+      {/* Drag handle */}
+      <button
+        type="button"
+        className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+        {...attributes}
+        {...listeners}
+        aria-label="Drag to reorder"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="5" cy="3" r="1.5" />
+          <circle cx="11" cy="3" r="1.5" />
+          <circle cx="5" cy="8" r="1.5" />
+          <circle cx="11" cy="8" r="1.5" />
+          <circle cx="5" cy="13" r="1.5" />
+          <circle cx="11" cy="13" r="1.5" />
+        </svg>
+      </button>
+
       <span className="font-mono text-xs text-muted-foreground">#{lane.order}</span>
       <span className="font-medium">{lane.name}</span>
       {lane.isCatchAll && (
@@ -233,8 +289,45 @@ function CreateSwimlaneForm({
 
 // ── Main Tab ────────────────────────────────────────────────────────────────
 
-export function SwimlanesTab({ boardId, swimlanes }: Props) {
+export function SwimlanesTab({ boardId, swimlanes: initialSwimlanes }: Props) {
   const [isCreating, setIsCreating] = useState(false);
+  const [lanes, setLanes] = useState(initialSwimlanes);
+  const [, startTransition] = useTransition();
+
+  // Sync with server when props change (after create/delete mutations)
+  const [prevInitial, setPrevInitial] = useState(initialSwimlanes);
+  if (initialSwimlanes !== prevInitial) {
+    setPrevInitial(initialSwimlanes);
+    setLanes(initialSwimlanes);
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = lanes.findIndex((l) => l.id === active.id);
+    const newIndex = lanes.findIndex((l) => l.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Reorder locally
+    const updated = [...lanes];
+    const [moved] = updated.splice(oldIndex, 1);
+    updated.splice(newIndex, 0, moved);
+
+    // Update order values
+    const reordered = updated.map((l, i) => ({ ...l, order: i }));
+    setLanes(reordered);
+
+    // Persist to server
+    startTransition(async () => {
+      await reorderSwimlanes(boardId, reordered.map((l) => l.id));
+    });
+  }
 
   return (
     <div className="space-y-4">
@@ -249,14 +342,25 @@ export function SwimlanesTab({ boardId, swimlanes }: Props) {
         <CreateSwimlaneForm boardId={boardId} onDone={() => setIsCreating(false)} />
       )}
 
-      {swimlanes.length === 0 ? (
+      {lanes.length === 0 ? (
         <p className="text-sm text-muted-foreground">No swimlanes configured.</p>
       ) : (
-        <div className="space-y-2">
-          {swimlanes.map((lane) => (
-            <SwimlaneRow key={lane.id} lane={lane} />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={lanes.map((l) => l.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {lanes.map((lane) => (
+                <SortableSwimlaneRow key={lane.id} lane={lane} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

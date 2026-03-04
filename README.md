@@ -84,7 +84,7 @@ cp .env.example .env
 | Route | Description |
 |---|---|
 | `/` | Redirects to `/boards` |
-| `/boards` | List all boards, create new boards |
+| `/boards` | List all boards, create new boards (Open + Settings only) |
 | `/board/[boardId]` | Main board view: TODO \| ACTIVE grid \| DONE |
 | `/settings/[boardId]` | Board settings: types, swimlanes, color rules, people & teams |
 
@@ -92,19 +92,22 @@ cp .env.example .env
 
 ```
 ┌──────────┬──────────────────────────────────────┬──────────┐
+│          │   ← Boards   Board Name   Settings → │          │
+│          ├──────────────────────────────────────┤          │
 │          │          ACTIVE GRID                  │          │
 │   TODO   │  Swimlane A  │  Swimlane B  │  ...   │   DONE   │
 │ Backlog  │──────────────┼──────────────┼────────│  Bucket  │
-│          │  step 9 (old)│              │        │          │
-│  (list)  │  step 8      │              │        │  (list)  │
+│          │  step 9 (red)│              │        │          │
+│  (list)  │  step 5 (yel)│              │        │  (list)  │
 │          │  ...         │              │        │          │
-│          │  step 0 (new)│              │        │          │
+│          │  step 0 (grn)│              │        │          │
 └──────────┴──────────────────────────────────────┴──────────┘
 ```
 
 - **TODO** — vertical backlog list; drag to ACTIVE to start the timer
-- **ACTIVE** — grid with columns = swimlanes, rows = time steps (0 = newest at bottom, maxSteps-1 = oldest at top). Tickets auto-advance rows based on `TicketType.stepIntervalSeconds`.
+- **ACTIVE** — grid with columns = swimlanes, rows = time steps (0 = newest at bottom, maxSteps-1 = oldest at top). Tickets auto-advance rows based on `TicketType.stepIntervalSeconds`. Rows have a **color gradient**: green (step 0) → yellow (middle) → red (oldest).
 - **DONE** — completed tickets; drag back to ACTIVE to reopen (resets `startedAt`)
+- **Board title** is centered in the header bar
 
 ### Timer-Based Movement
 
@@ -146,7 +149,7 @@ Each swimlane has a `filterExprJson` — an AND/OR expression tree that determin
 }
 ```
 
-When a ticket is dropped into a swimlane, the swimlane's `onDropPatchJson` is applied to make the ticket match the filter (e.g., `{ "teamId": "<frontend-team-id>" }`).
+When a ticket is dropped into a swimlane, the swimlane's `onDropPatchJson` is applied to make the ticket match the filter (e.g., `{ "teamId": "<frontend-team-id>" }`). Swimlane order can be changed via **drag-and-drop** in Settings → Swimlanes.
 
 ### Color Rules
 

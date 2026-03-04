@@ -69,44 +69,51 @@ export function TodoBacklog({ boardId, tickets, ticketTypes, onTicketClick }: Pr
         {isCreating && (
           <form action={formAction} className="mb-3 space-y-2 rounded-lg border bg-card p-3" data-testid="create-ticket-form">
             <input type="hidden" name="boardId" value={boardId} />
-            <Input
-              name="title"
-              placeholder="Ticket title…"
-              required
-              maxLength={200}
-              autoFocus
-              className="h-8 text-sm"
-              data-testid="ticket-title-input"
-            />
-            {ticketTypes.length > 0 && (
-              <select
-                name="typeId"
-                required
-                className="h-8 w-full rounded-md border bg-background px-2 text-sm"
-                defaultValue={ticketTypes[0].id}
-              >
-                {ticketTypes.map((tt) => (
-                  <option key={tt.id} value={tt.id}>
-                    {tt.name} ({tt.key})
-                  </option>
-                ))}
-              </select>
-            )}
-            <div className="flex gap-2">
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Creating…" : "Create"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => setIsCreating(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-            {state.error && (
-              <p className="text-xs text-destructive">{state.error}</p>
+            {ticketTypes.length === 0 ? (
+              <p className="text-xs text-destructive">
+                No ticket types configured. Add at least one in{" "}
+                <span className="font-medium">Settings → Ticket Types</span> before creating tickets.
+              </p>
+            ) : (
+              <>
+                <Input
+                  name="title"
+                  placeholder="Ticket title…"
+                  required
+                  maxLength={200}
+                  autoFocus
+                  className="h-8 text-sm"
+                  data-testid="ticket-title-input"
+                />
+                <select
+                  name="typeId"
+                  required
+                  className="h-8 w-full rounded-md border bg-background px-2 text-sm"
+                  defaultValue={ticketTypes[0].id}
+                >
+                  {ticketTypes.map((tt) => (
+                    <option key={tt.id} value={tt.id}>
+                      {tt.name} ({tt.key})
+                    </option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <Button type="submit" size="sm" disabled={isPending}>
+                    {isPending ? "Creating…" : "Create"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsCreating(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                {state.error && (
+                  <p className="text-xs text-destructive">{state.error}</p>
+                )}
+              </>
             )}
           </form>
         )}
