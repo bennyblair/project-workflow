@@ -25,6 +25,11 @@ function buildFilterCtx(
     assignee: { name: string } | null;
   },
   overrides: Record<string, unknown> = {},
+  resolvedNames: {
+    "type.key"?: string;
+    "team.name"?: string;
+    "assignee.name"?: string;
+  } = {},
 ): FilterContext {
   const merged = { ...ticket, ...overrides };
   return {
@@ -34,10 +39,47 @@ function buildFilterCtx(
     status: (merged.status as string) ?? ticket.status,
     title: (merged.title as string) ?? ticket.title,
     description: (merged.description as string) ?? ticket.description,
-    "type.key": ticket.type?.key,
-    "team.name": ticket.team?.name,
-    "assignee.name": ticket.assignee?.name,
+    "type.key": resolvedNames["type.key"] ?? ticket.type?.key,
+    "team.name": resolvedNames["team.name"] ?? ticket.team?.name,
+    "assignee.name": resolvedNames["assignee.name"] ?? ticket.assignee?.name,
   };
+}
+
+/**
+ * Resolve entity names from patch IDs so filter expressions can match.
+ * When onDropPatch sets teamId, assigneeId, or typeId, we look up the
+ * corresponding name so "team.name" / "assignee.name" / "type.key" are correct.
+ */
+async function resolveNamesFromPatch(
+  patch: Record<string, unknown>,
+): Promise<{ "type.key"?: string; "team.name"?: string; "assignee.name"?: string }> {
+  const resolved: { "type.key"?: string; "team.name"?: string; "assignee.name"?: string } = {};
+
+  if (patch.teamId && typeof patch.teamId === "string") {
+    const team = await prisma.team.findUnique({
+      where: { id: patch.teamId },
+      select: { name: true },
+    });
+    if (team) resolved["team.name"] = team.name;
+  }
+
+  if (patch.assigneeId && typeof patch.assigneeId === "string") {
+    const person = await prisma.person.findUnique({
+      where: { id: patch.assigneeId },
+      select: { name: true },
+    });
+    if (person) resolved["assignee.name"] = person.name;
+  }
+
+  if (patch.typeId && typeof patch.typeId === "string") {
+    const ticketType = await prisma.ticketType.findUnique({
+      where: { id: patch.typeId },
+      select: { key: true },
+    });
+    if (ticketType) resolved["type.key"] = ticketType.key;
+  }
+
+  return resolved;
 }
 
 /** Compute orderKey at the end of a given status bucket. */
@@ -111,7 +153,8 @@ export async function moveTicketToActive(
 
   // Validate that the ticket will match the effective swimlane filter after patching
   if (!effectiveSwimlane.isCatchAll && !snapped) {
-    const ctx = buildFilterCtx(ticket, { ...patch, status: "ACTIVE" });
+    const resolvedNames = await resolveNamesFromPatch(patch);
+    const ctx = buildFilterCtx(ticket, { ...patch, status: "ACTIVE" }, resolvedNames);
     const expr = effectiveSwimlane.filterExprJson as FilterExpr;
     if (!evaluateFilter(expr, ctx)) {
       const patchFields = Object.keys(patch);
@@ -200,7 +243,8 @@ export async function moveActiveToSwimlane(
 
   // Validate the ticket will match the target swimlane after patch
   if (!swimlane.isCatchAll) {
-    const ctx = buildFilterCtx(ticket, patch);
+    const resolvedNames = await resolveNamesFromPatch(patch);
+    const ctx = buildFilterCtx(ticket, patch, resolvedNames);
     const expr = swimlane.filterExprJson as FilterExpr;
     if (!evaluateFilter(expr, ctx)) {
       const patchFields = Object.keys(patch);

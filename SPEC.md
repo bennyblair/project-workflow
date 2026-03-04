@@ -4,7 +4,9 @@ You are a senior full-stack engineer. Build an MVP web app "FlowLine" inspired b
 
 ## SCOPE / ASSUMPTIONS (LOCK THESE IN)
 - Single-user local POC (no auth). Treat all actions as admin. Structure code so auth/roles can be added later.
-- Multiple boards: create, rename, delete.
+- **Projects** are the top-level entity. Each project contains one or more boards.
+- **Ticket types are project-scoped** — defined once per project and shared across all boards in that project.
+- Multiple boards within a project: create, rename, delete.
 - Attachments: UI only (button/tab exists, shows placeholder). No upload/storage logic.
 - No audit logging of automatic movement; only log human actions.
 - Board auto-refreshes client-side on a timer to reflect movement (no server cron/job).
@@ -30,10 +32,14 @@ Reopen:
 - DONE tickets can be dragged back to TODO or ACTIVE.
 - If reopened to ACTIVE, startedAt resets to now (time restarts).
 
-## MULTI-BOARD
-- /boards page lists boards and allows create. Board cards show Open and Settings buttons only — **no rename or delete** on the home page (these actions live in /settings/[boardId]).
+## PROJECTS & BOARDS
+- /boards (home page) shows **projects** with their sub-boards. Each project section lists its boards and allows creating new boards within it.
+- A **Create Project** form allows creating new projects.
+- Projects show a Settings link to **/project/[projectId]/settings** for project-level configuration (ticket types).
+- Board cards show Open and Settings buttons only — **no rename or delete** on the home page (these actions live in /settings/[boardId]).
 - /board/[boardId] is the main board view.
-- /settings/[boardId] configures that board (including rename and delete).
+- /settings/[boardId] configures that board (rename, delete, swimlanes, color rules, people & teams — but NOT ticket types).
+- /project/[projectId]/settings configures project-level settings (ticket types).
 
 ## BOARD LAYOUT (MAIN VIEW)
 Header: board name is **centered** in the header bar, with a back button on the left and settings on the right.
@@ -187,13 +193,18 @@ No auto-move events.
 
 ## DATA MODEL (Prisma)
 
-### Board
+### Project
 - id, name
+- createdAt, updatedAt
+
+### Board
+- id, **projectId**, name
 - maxSteps (default 10)
 - refreshIntervalSeconds (default 5)
 
 ### TicketType
-- id, boardId, name, key, defaultColorHex, stepIntervalSeconds
+- id, **projectId**, name, key, defaultColorHex, stepIntervalSeconds
+- Unique on **(projectId, key)** — same key can exist in different projects
 
 ### Team
 - id, boardId, name
@@ -230,18 +241,21 @@ No auto-move events.
 - createdAt
 
 ## SERVER ACTIONS / MUTATIONS (Next.js)
-- createBoard, renameBoard, deleteBoard
+- createProject, updateProject, deleteProject
+- createBoard(projectId, name), renameBoard, deleteBoard
 - createTicket (creates in TODO backlog; must require a typeId — show error if no ticket types exist)
 - updateTicketFields (title, description, type, assignee, team)
 - moveTicketToActive(boardId, ticketId, targetSwimlaneId)
 - moveTicketToDone(boardId, ticketId)
 - moveTicketToTodo(boardId, ticketId)
 - reorderTicket(ticketId, contextKey, newOrderKey)
+- Ticket type CRUD is scoped to **projectId** (not boardId)
 
 Each mutation must:
 - validate input with zod
 - write audit event
 - for moveTicketToActive / swimlane drop: apply onDropPatch + validate filter match
+- for cross-swimlane moves: **resolve entity names** from patch IDs (teamId → team.name, etc.) before evaluating filter expressions
 
 ## BOARD RENDERING
 - Load board config, swimlanes, color rules, types, teams, people, and tickets.
@@ -254,13 +268,19 @@ Each mutation must:
 - Recompute on interval tick and after any mutation.
 - Provide smooth UI transitions when items shift rows (basic CSS transitions acceptable).
 
-## SETTINGS UI (/settings/[boardId])
+## SETTINGS UI
+
+### Board Settings (/settings/[boardId])
 Tabs:
-1) Board: maxSteps, refreshIntervalSeconds
-2) Ticket Types: CRUD + stepIntervalSeconds
-3) Swimlanes: CRUD + filter editor + onDropPatch editor + **drag-and-drop reordering** (order reflects on the board)
-4) Color Rules: CRUD ordered list + expression editor
-5) People & Teams: CRUD
+1) Board: name, maxSteps, refreshIntervalSeconds (plus rename/delete)
+2) Swimlanes: CRUD + filter editor + onDropPatch editor + **drag-and-drop reordering** (order reflects on the board)
+3) Color Rules: CRUD ordered list + expression editor
+4) People & Teams: CRUD
+
+### Project Settings (/project/[projectId]/settings)
+Tabs:
+1) Project: project name
+2) Ticket Types: CRUD + stepIntervalSeconds per type (shared across all project boards)
 
 ## EDITORS (MVP UI)
 - Build a simple visual rule builder:
@@ -273,9 +293,9 @@ Tabs:
   - .env.example
   - Prisma migrations
   - Seed:
-    - 2 boards
-    - types with different speeds (e.g. Bug=3600s (1hr), Task=7200s (2hr), Feature=14400s (4hr))
-    - people/teams
+    - 1 project ("Engineering") with 2 boards
+    - Ticket types defined at **project level** with different speeds (e.g. Bug=3600s (1hr), Task=7200s (2hr), Feature=14400s (4hr))
+    - people/teams (per board)
     - swimlanes (e.g. "Bugs", "Ben", "Team A", "Unmatched")
     - color rules examples
     - tickets across TODO/ACTIVE/DONE

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const createBoardSchema = z.object({
+  projectId: z.string().cuid(),
   name: z.string().min(1, "Board name is required").max(100),
 });
 

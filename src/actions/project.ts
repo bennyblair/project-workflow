@@ -1,25 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
-  createBoardSchema,
-  renameBoardSchema,
-  deleteBoardSchema,
-} from "@/lib/schemas/board";
+  createProjectSchema,
+  updateProjectSchema,
+  deleteProjectSchema,
+} from "@/lib/schemas/project";
 
 export type ActionState = {
   success: boolean;
   error?: string;
 };
 
-export async function createBoard(
+export async function createProject(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = createBoardSchema.safeParse({
-    projectId: formData.get("projectId"),
+  const parsed = createProjectSchema.safeParse({
     name: formData.get("name"),
   });
 
@@ -27,29 +25,7 @@ export async function createBoard(
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const board = await prisma.board.create({
-    data: { projectId: parsed.data.projectId, name: parsed.data.name },
-  });
-
-  revalidatePath("/boards");
-  redirect(`/board/${board.id}`);
-}
-
-export async function renameBoard(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const parsed = renameBoardSchema.safeParse({
-    id: formData.get("id"),
-    name: formData.get("name"),
-  });
-
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
-  }
-
-  await prisma.board.update({
-    where: { id: parsed.data.id },
+  await prisma.project.create({
     data: { name: parsed.data.name },
   });
 
@@ -57,11 +33,33 @@ export async function renameBoard(
   return { success: true };
 }
 
-export async function deleteBoard(
+export async function updateProject(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = deleteBoardSchema.safeParse({
+  const raw: Record<string, unknown> = { id: formData.get("id") };
+  const name = formData.get("name");
+  if (name !== null && name !== "") raw.name = name;
+
+  const parsed = updateProjectSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  const { id, ...fields } = parsed.data;
+  if (Object.keys(fields).length === 0) return { success: true };
+
+  await prisma.project.update({ where: { id }, data: fields });
+  revalidatePath("/boards");
+  revalidatePath(`/project/${id}/settings`);
+  return { success: true };
+}
+
+export async function deleteProject(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = deleteProjectSchema.safeParse({
     id: formData.get("id"),
   });
 
@@ -69,7 +67,7 @@ export async function deleteBoard(
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  await prisma.board.delete({
+  await prisma.project.delete({
     where: { id: parsed.data.id },
   });
 

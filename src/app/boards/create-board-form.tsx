@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 
 const initialState: ActionState = { success: false };
 
-export function CreateBoardForm() {
+export function CreateBoardForm({ projectId }: { projectId: string }) {
   const [state, formAction, isPending] = useActionState(createBoard, initialState);
 
   return (
     <form action={formAction} className="flex gap-3" data-testid="create-board-form">
+      <input type="hidden" name="projectId" value={projectId} />
       <Input
         name="name"
         placeholder="New board name…"

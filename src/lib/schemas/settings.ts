@@ -10,7 +10,7 @@ export const updateBoardSettingsSchema = z.object({
 
 // ── Ticket Types ────────────────────────────────────────────────────────────
 export const createTicketTypeSchema = z.object({
-  boardId: z.string().cuid(),
+  projectId: z.string().cuid(),
   name: z.string().min(1, "Name is required").max(100),
   key: z
     .string()

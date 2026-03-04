@@ -46,19 +46,35 @@ async function dndDrag(page: Page, source: Locator, target: Locator) {
 
 test.describe.serial("FlowLine smoke tests", () => {
   let boardId: string;
+  let projectId: string;
   let boardUrl: string;
+  const testProjectName = `Smoke Project ${Date.now()}`;
   const testBoardName = `Smoke Test ${Date.now()}`;
   const ticketTitle = `E2E Ticket ${Date.now()}`;
 
   // -----------------------------------------------------------------------
-  // 1. Create board
+  // 1. Create project and board
   // -----------------------------------------------------------------------
-  test("create a new board", async ({ page }) => {
+  test("create a new project and board", async ({ page }) => {
     await page.goto("/boards");
-    await expect(page.getByRole("heading", { name: "Boards" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible();
 
-    await page.getByTestId("board-name-input").fill(testBoardName);
-    await page.getByTestId("create-board-submit").click();
+    // Create a project first
+    await page.getByTestId("project-name-input").fill(testProjectName);
+    await page.getByTestId("create-project-submit").click();
+
+    // Wait for the project section to appear
+    await expect(page.getByText(testProjectName)).toBeVisible({ timeout: 10_000 });
+
+    // Extract projectId from the project section's data-testid
+    const projectSection = page.locator("[data-testid^='project-section-']").filter({ hasText: testProjectName });
+    const testId = await projectSection.getAttribute("data-testid");
+    projectId = testId!.replace("project-section-", "");
+
+    // Now create a board within that project
+    const boardForm = projectSection.getByTestId("create-board-form");
+    await boardForm.getByTestId("board-name-input").fill(testBoardName);
+    await boardForm.getByTestId("create-board-submit").click();
 
     // createBoard redirects to /board/<id> — wait for the board page to load
     await page.waitForURL(/\/board\//, { timeout: 15_000 });
@@ -78,8 +94,8 @@ test.describe.serial("FlowLine smoke tests", () => {
   // 2. Create ticket in TODO
   // -----------------------------------------------------------------------
   test("create a ticket in TODO", async ({ page }) => {
-    // First: configure the board via Settings (needs a type + catch-all swimlane)
-    await setupBoardSettings(page, boardId);
+    // First: configure via Settings (needs a type in project settings + catch-all swimlane in board settings)
+    await setupBoardSettings(page, boardId, projectId);
 
     // Navigate to the board
     await page.goto(boardUrl);
@@ -224,13 +240,13 @@ test.describe.serial("FlowLine smoke tests", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Helper: Set up ticket type + catch-all swimlane on a new board via Settings
+// Helper: Set up ticket type (via project settings) + catch-all swimlane (via board settings)
 // ---------------------------------------------------------------------------
-async function setupBoardSettings(page: Page, boardId: string) {
-  await page.goto(`/settings/${boardId}`);
+async function setupBoardSettings(page: Page, boardId: string, projectId: string) {
+  // ── Create a ticket type in project settings ──
+  await page.goto(`/project/${projectId}/settings`);
   await page.waitForLoadState("networkidle");
 
-  // ── Create a ticket type ──
   await page.getByRole("tab", { name: "Ticket Types" }).click();
   await page.getByText("+ New Type").click();
 
@@ -241,7 +257,10 @@ async function setupBoardSettings(page: Page, boardId: string) {
   // Wait for the type to appear in the list
   await expect(page.getByText("TSK")).toBeVisible({ timeout: 10_000 });
 
-  // ── Create a catch-all swimlane ──
+  // ── Create a catch-all swimlane in board settings ──
+  await page.goto(`/settings/${boardId}`);
+  await page.waitForLoadState("networkidle");
+
   await page.getByRole("tab", { name: "Swimlanes" }).click();
   await page.getByText("+ New Swimlane").click();
 

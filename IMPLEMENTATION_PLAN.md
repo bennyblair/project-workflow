@@ -126,3 +126,19 @@ Check off items as they are completed.
 - [x] Move description + audit log into Overview tab (remove separate Description and Details tabs)
 - [x] Update SPEC.md, README, IMPLEMENTATION_PLAN
 - [x] Verify typecheck + Playwright tests pass
+
+## Milestone 14: Project Entity & Swimlane DnD Fix ✅
+- [x] Fix cross-swimlane DnD: resolve entity names (team.name, assignee.name, type.key) from patch IDs before evaluating filter expressions
+- [x] Add Project model to Prisma schema (id, name, createdAt, updatedAt)
+- [x] Add projectId FK to Board model (required, cascade delete)
+- [x] Move TicketType from board-scoped to project-scoped (boardId → projectId, unique on projectId+key)
+- [x] Create project CRUD server actions + Zod schemas (createProject, updateProject, deleteProject)
+- [x] Update ticket type CRUD actions to use projectId instead of boardId
+- [x] Redesign home page: show projects with nested board cards, create project form, create board form per project
+- [x] Create project settings page (/project/[projectId]/settings) with Ticket Types tab
+- [x] Remove Ticket Types tab from board settings; board settings keeps Board, Swimlanes, Color Rules, People & Teams
+- [x] Update board page to load ticket types from board.project.ticketTypes
+- [x] Update seed data: 1 project with 2 boards, ticket types at project level
+- [x] Update Playwright smoke tests for project-based flow
+- [x] Update SPEC.md, README, IMPLEMENTATION_PLAN
+- [x] Verify typecheck + all Playwright tests pass

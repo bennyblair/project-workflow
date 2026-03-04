@@ -12,11 +12,15 @@ export default async function BoardPage({ params }: { params: Params }) {
   const board = await prisma.board.findUnique({
     where: { id: boardId },
     include: {
+      project: {
+        include: {
+          ticketTypes: { orderBy: { createdAt: "asc" } },
+        },
+      },
       tickets: {
         include: { type: true, assignee: true, team: true },
         orderBy: { orderKey: "asc" },
       },
-      ticketTypes: { orderBy: { createdAt: "asc" } },
       swimlanes: { orderBy: { order: "asc" } },
       colorRules: { orderBy: { order: "asc" } },
     },
@@ -29,7 +33,7 @@ export default async function BoardPage({ params }: { params: Params }) {
   const doneTickets = board.tickets.filter((t) => t.status === "DONE");
 
   // Serialize for client components
-  const serializedTicketTypes = board.ticketTypes.map((tt) => ({
+  const serializedTicketTypes = board.project.ticketTypes.map((tt) => ({
     id: tt.id,
     name: tt.name,
     key: tt.key,

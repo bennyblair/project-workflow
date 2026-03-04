@@ -36,6 +36,7 @@ export async function getTicketDetail(
       type: true,
       assignee: true,
       team: true,
+      board: { select: { projectId: true } },
       events: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -45,7 +46,7 @@ export async function getTicketDetail(
   // Also fetch available options for editing
   const [types, people, teams] = await Promise.all([
     prisma.ticketType.findMany({
-      where: { boardId: ticket.boardId },
+      where: { projectId: ticket.board.projectId },
       orderBy: { createdAt: "asc" },
       select: { id: true, name: true, key: true },
     }),

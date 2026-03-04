@@ -19,7 +19,7 @@ type TicketType = {
 };
 
 type Props = {
-  boardId: string;
+  projectId: string;
   ticketTypes: TicketType[];
 };
 
@@ -103,7 +103,7 @@ function TicketTypeRow({ tt }: { tt: TicketType }) {
   );
 }
 
-export function TicketTypesTab({ boardId, ticketTypes }: Props) {
+export function TicketTypesTab({ projectId, ticketTypes }: Props) {
   const [isCreating, setIsCreating] = useState(false);
   const [createState, createAction, isCreatingPending] = useActionState(
     async (prev: ActionState, formData: FormData) => {
@@ -125,7 +125,7 @@ export function TicketTypesTab({ boardId, ticketTypes }: Props) {
 
       {isCreating && (
         <form action={createAction} className="space-y-3 rounded-lg border bg-muted/30 p-4">
-          <input type="hidden" name="boardId" value={boardId} />
+          <input type="hidden" name="projectId" value={projectId} />
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-medium">Name</label>

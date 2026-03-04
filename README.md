@@ -1,7 +1,8 @@
 # FlowLine
 
-Visual workflow board with timer-based ticket movement. Tickets progress through
-time-based swim lanes on an ACTIVE grid, automatically advancing rows as time elapses.
+Visual workflow board with timer-based ticket movement. **Projects** contain boards,
+and **ticket types are shared across all boards** within a project. Tickets progress
+through time-based swim lanes on an ACTIVE grid, automatically advancing rows as time elapses.
 
 ## Tech Stack
 
@@ -41,14 +42,14 @@ docker compose up -d
 # 5. Run migrations
 pnpm prisma:migrate
 
-# 6. Seed sample data (2 boards with tickets, types, teams, people, swimlanes, color rules)
+# 6. Seed sample data (1 project with 2 boards, shared ticket types, teams, people, swimlanes, color rules)
 pnpm prisma:seed
 
 # 7. Start the dev server
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to `/boards`.
+Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to `/boards`, showing projects and their boards.
 
 ## Scripts
 
@@ -84,9 +85,10 @@ cp .env.example .env
 | Route | Description |
 |---|---|
 | `/` | Redirects to `/boards` |
-| `/boards` | List all boards, create new boards (Open + Settings only) |
+| `/boards` | Home page: shows projects with nested boards, create project & board |
 | `/board/[boardId]` | Main board view: TODO \| ACTIVE grid \| DONE |
-| `/settings/[boardId]` | Board settings: types, swimlanes, color rules, people & teams |
+| `/settings/[boardId]` | Board settings: swimlanes, color rules, people & teams |
+| `/project/[projectId]/settings` | Project settings: ticket types (shared across boards) |
 
 ### Board Layout
 
@@ -175,11 +177,12 @@ All human actions are logged (automatic timer movement is not):
 
 ```
 src/
-├── actions/               # Server actions (board, ticket, move-ticket, settings, ticket-detail)
+├── actions/               # Server actions (board, project, ticket, move-ticket, settings)
 ├── app/
 │   ├── board/[boardId]/   # Board page + BoardShell client component
-│   ├── boards/            # Board list + create/card components
-│   ├── settings/[boardId]/ # Settings tabs (board, types, swimlanes, colors, people)
+│   ├── boards/            # Home page: projects + boards, create forms
+│   ├── project/[projectId]/settings/ # Project settings (ticket types)
+│   ├── settings/[boardId]/ # Board settings (swimlanes, colors, people & teams)
 │   ├── globals.css        # Tailwind + oklch theme variables
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Landing redirect → /boards
@@ -191,19 +194,19 @@ src/
 │   ├── droppable-zone.tsx # dnd-kit droppable wrapper
 │   ├── expression-builder.tsx # Visual AND/OR filter rule builder
 │   ├── ticket-card.tsx    # Ticket card rendering
-│   ├── ticket-detail-panel.tsx # Slide-out detail panel (4 tabs)
+│   ├── ticket-detail-panel.tsx # Slide-out detail panel
 │   └── todo-backlog.tsx   # TODO column + create ticket form
 ├── lib/
 │   ├── engine/            # Pure functions: step-index, filter-evaluator, color-evaluator, order-key
-│   ├── schemas/           # Zod validation schemas (board, ticket, settings)
+│   ├── schemas/           # Zod validation schemas (board, project, ticket, settings)
 │   ├── prisma.ts          # PrismaClient singleton with PrismaPg adapter
 │   └── utils.ts           # cn() utility
 e2e/
 └── smoke.spec.ts          # 6 Playwright smoke tests
 prisma/
-├── schema.prisma          # Database schema (all models)
+├── schema.prisma          # Database schema (Project, Board, TicketType, etc.)
 ├── prisma.config.ts       # Prisma 7 adapter config
-└── seed.ts                # Seeds 2 boards with full data
+└── seed.ts                # Seeds 1 project with 2 boards
 ```
 
 ## Testing
@@ -224,6 +227,7 @@ The smoke tests cover the full lifecycle: create board → create ticket → dra
 ## MVP Assumptions
 
 1. **Single-user, no auth** — all actions are treated as admin. Code is structured so authentication/authorization can be added later (server actions, separate concerns).
+11. **Projects group boards** — boards always belong to a project. Ticket types are defined at the project level and shared across all boards in the project.
 2. **No real attachment storage** — the Attachments tab exists in the ticket detail panel as a placeholder UI ("Attachments coming soon").
 3. **Client-side timer only** — no server-side cron or background jobs. The board refreshes via `setInterval` + `router.refresh()` on the client.
 4. **No audit logging of automatic movement** — only human-initiated actions (drag, edit, create) are logged.

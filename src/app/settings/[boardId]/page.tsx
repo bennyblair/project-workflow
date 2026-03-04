@@ -12,7 +12,6 @@ export default async function SettingsPage({ params }: { params: Params }) {
   const board = await prisma.board.findUnique({
     where: { id: boardId },
     include: {
-      ticketTypes: { orderBy: { createdAt: "asc" } },
       teams: { orderBy: { createdAt: "asc" } },
       people: { orderBy: { createdAt: "asc" } },
       swimlanes: { orderBy: { order: "asc" } },
@@ -39,13 +38,6 @@ export default async function SettingsPage({ params }: { params: Params }) {
           name: board.name,
           maxSteps: board.maxSteps,
           refreshIntervalSeconds: board.refreshIntervalSeconds,
-          ticketTypes: board.ticketTypes.map((tt) => ({
-            id: tt.id,
-            name: tt.name,
-            key: tt.key,
-            defaultColorHex: tt.defaultColorHex,
-            stepIntervalSeconds: tt.stepIntervalSeconds,
-          })),
           teams: board.teams.map((t) => ({ id: t.id, name: t.name })),
           people: board.people.map((p) => ({ id: p.id, name: p.name })),
           swimlanes: board.swimlanes.map((s) => ({

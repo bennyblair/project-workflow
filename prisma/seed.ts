@@ -7,9 +7,15 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("🌱 Seeding FlowLine database…");
 
+  // ── Project: Engineering ─────────────────────────────────────────────
+  const project = await prisma.project.create({
+    data: { name: "Engineering" },
+  });
+
   // ── Board 1: Engineering Sprint ──────────────────────────────────────
   const board1 = await prisma.board.create({
     data: {
+      projectId: project.id,
       name: "Engineering Sprint",
       maxSteps: 10,
       refreshIntervalSeconds: 5,
@@ -19,17 +25,18 @@ async function main() {
   // ── Board 2: Design Pipeline ─────────────────────────────────────────
   const board2 = await prisma.board.create({
     data: {
+      projectId: project.id,
       name: "Design Pipeline",
       maxSteps: 8,
       refreshIntervalSeconds: 10,
     },
   });
 
-  // ── Ticket Types ─────────────────────────────────────────────────────
+  // ── Ticket Types (project-level, shared across boards) ───────────────
   const [bugType, taskType, featureType] = await Promise.all([
     prisma.ticketType.create({
       data: {
-        boardId: board1.id,
+        projectId: project.id,
         name: "Bug",
         key: "BUG",
         defaultColorHex: "#ef4444",
@@ -38,7 +45,7 @@ async function main() {
     }),
     prisma.ticketType.create({
       data: {
-        boardId: board1.id,
+        projectId: project.id,
         name: "Task",
         key: "TASK",
         defaultColorHex: "#6366f1",
@@ -47,7 +54,7 @@ async function main() {
     }),
     prisma.ticketType.create({
       data: {
-        boardId: board1.id,
+        projectId: project.id,
         name: "Feature",
         key: "FEAT",
         defaultColorHex: "#22c55e",
@@ -56,26 +63,7 @@ async function main() {
     }),
   ]);
 
-  const [designBug, designTask] = await Promise.all([
-    prisma.ticketType.create({
-      data: {
-        boardId: board2.id,
-        name: "Bug",
-        key: "BUG",
-        defaultColorHex: "#ef4444",
-        stepIntervalSeconds: 5400,
-      },
-    }),
-    prisma.ticketType.create({
-      data: {
-        boardId: board2.id,
-        name: "Task",
-        key: "TASK",
-        defaultColorHex: "#8b5cf6",
-        stepIntervalSeconds: 3600,
-      },
-    }),
-  ]);
+  // (Board 2 uses the same project-level ticket types)
 
   // ── Teams ────────────────────────────────────────────────────────────
   const [frontendTeam, backendTeam] = await Promise.all([
@@ -287,7 +275,7 @@ async function main() {
       data: {
         boardId: board2.id,
         title: "Redesign onboarding flow",
-        typeId: designTask.id,
+        typeId: taskType.id,
         assigneeId: dana.id,
         teamId: uxTeam.id,
         status: TicketStatus.TODO,
@@ -298,7 +286,7 @@ async function main() {
       data: {
         boardId: board2.id,
         title: "Fix icon alignment on cards",
-        typeId: designBug.id,
+        typeId: bugType.id,
         assigneeId: dana.id,
         teamId: uxTeam.id,
         status: TicketStatus.ACTIVE,
@@ -308,7 +296,7 @@ async function main() {
     }),
   ]);
 
-  console.log("✅ Seeded 2 boards, ticket types, teams, people, swimlanes, color rules, and tickets.");
+  console.log("✅ Seeded 1 project, 2 boards, project-level ticket types, teams, people, swimlanes, color rules, and tickets.");
 }
 
 main()

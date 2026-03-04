@@ -1,43 +1,54 @@
 import { prisma } from "@/lib/prisma";
-import { CreateBoardForm } from "./create-board-form";
-import { BoardCard } from "./board-card";
+import { CreateProjectForm } from "./create-project-form";
+import { ProjectSection } from "./project-section";
 
 export const dynamic = "force-dynamic";
 
 export default async function BoardsPage() {
-  const boards = await prisma.board.findMany({
+  const projects = await prisma.project.findMany({
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { tickets: true } } },
+    include: {
+      boards: {
+        orderBy: { createdAt: "desc" },
+        include: { _count: { select: { tickets: true } } },
+      },
+      _count: { select: { ticketTypes: true } },
+    },
   });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <main className="mx-auto max-w-5xl px-6 py-12">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Boards</h1>
+          <h1 className="text-3xl font-bold">Projects</h1>
           <p className="text-muted-foreground">
-            Manage your workflow boards.
+            Manage your projects and their workflow boards.
           </p>
         </div>
       </div>
 
-      <CreateBoardForm />
+      <CreateProjectForm />
 
-      {boards.length === 0 ? (
+      {projects.length === 0 ? (
         <p className="mt-8 text-center text-muted-foreground">
-          No boards yet. Create one above to get started.
+          No projects yet. Create one above to get started.
         </p>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {boards.map((board) => (
-            <BoardCard
-              key={board.id}
-              board={{
-                id: board.id,
-                name: board.name,
-                ticketCount: board._count.tickets,
-                maxSteps: board.maxSteps,
-                refreshIntervalSeconds: board.refreshIntervalSeconds,
+        <div className="mt-6 space-y-8">
+          {projects.map((project) => (
+            <ProjectSection
+              key={project.id}
+              project={{
+                id: project.id,
+                name: project.name,
+                ticketTypeCount: project._count.ticketTypes,
+                boards: project.boards.map((board) => ({
+                  id: board.id,
+                  name: board.name,
+                  ticketCount: board._count.tickets,
+                  maxSteps: board.maxSteps,
+                  refreshIntervalSeconds: board.refreshIntervalSeconds,
+                })),
               }}
             />
           ))}

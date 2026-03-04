@@ -64,7 +64,7 @@ export async function createTicketType(
   formData: FormData,
 ): Promise<ActionState> {
   const parsed = createTicketTypeSchema.safeParse({
-    boardId: formData.get("boardId"),
+    projectId: formData.get("projectId"),
     name: formData.get("name"),
     key: formData.get("key"),
     defaultColorHex: formData.get("defaultColorHex") || "#6366f1",
@@ -78,12 +78,13 @@ export async function createTicketType(
     await prisma.ticketType.create({ data: parsed.data });
   } catch (e: unknown) {
     if (e instanceof Error && e.message.includes("Unique constraint")) {
-      return { success: false, error: `Key "${parsed.data.key}" already exists on this board` };
+      return { success: false, error: `Key "${parsed.data.key}" already exists in this project` };
     }
     throw e;
   }
 
-  revalidatePath(`/settings/${parsed.data.boardId}`);
+  revalidatePath(`/project/${parsed.data.projectId}/settings`);
+  revalidatePath("/boards");
   return { success: true };
 }
 
@@ -113,12 +114,12 @@ export async function updateTicketType(
 
   const tt = await prisma.ticketType.findUnique({
     where: { id },
-    select: { boardId: true },
+    select: { projectId: true },
   });
   if (!tt) return { success: false, error: "Ticket type not found" };
 
   await prisma.ticketType.update({ where: { id }, data: fields });
-  revalidatePath(`/settings/${tt.boardId}`);
+  revalidatePath(`/project/${tt.projectId}/settings`);
   return { success: true };
 }
 
@@ -135,7 +136,7 @@ export async function deleteTicketType(
 
   const tt = await prisma.ticketType.findUnique({
     where: { id: parsed.data.id },
-    select: { boardId: true, _count: { select: { tickets: true } } },
+    select: { projectId: true, _count: { select: { tickets: true } } },
   });
   if (!tt) return { success: false, error: "Ticket type not found" };
   if (tt._count.tickets > 0) {
@@ -146,7 +147,7 @@ export async function deleteTicketType(
   }
 
   await prisma.ticketType.delete({ where: { id: parsed.data.id } });
-  revalidatePath(`/settings/${tt.boardId}`);
+  revalidatePath(`/project/${tt.projectId}/settings`);
   return { success: true };
 }
 

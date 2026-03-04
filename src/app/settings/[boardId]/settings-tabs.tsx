@@ -2,7 +2,6 @@
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BoardSettingsTab } from "./board-settings-tab";
-import { TicketTypesTab } from "./ticket-types-tab";
 import { SwimlanesTab } from "./swimlanes-tab";
 import { ColorRulesTab } from "./color-rules-tab";
 import { PeopleTeamsTab } from "./people-teams-tab";
@@ -12,13 +11,6 @@ type Board = {
   name: string;
   maxSteps: number;
   refreshIntervalSeconds: number;
-  ticketTypes: {
-    id: string;
-    name: string;
-    key: string;
-    defaultColorHex: string;
-    stepIntervalSeconds: number;
-  }[];
   teams: { id: string; name: string }[];
   people: { id: string; name: string }[];
   swimlanes: {
@@ -42,7 +34,6 @@ export function SettingsTabs({ board }: { board: Board }) {
     <Tabs defaultValue="board" className="w-full">
       <TabsList className="mb-6">
         <TabsTrigger value="board">Board</TabsTrigger>
-        <TabsTrigger value="ticket-types">Ticket Types</TabsTrigger>
         <TabsTrigger value="swimlanes">Swimlanes</TabsTrigger>
         <TabsTrigger value="color-rules">Color Rules</TabsTrigger>
         <TabsTrigger value="people-teams">People & Teams</TabsTrigger>
@@ -50,10 +41,6 @@ export function SettingsTabs({ board }: { board: Board }) {
 
       <TabsContent value="board">
         <BoardSettingsTab board={board} />
-      </TabsContent>
-
-      <TabsContent value="ticket-types">
-        <TicketTypesTab boardId={board.id} ticketTypes={board.ticketTypes} />
       </TabsContent>
 
       <TabsContent value="swimlanes">
