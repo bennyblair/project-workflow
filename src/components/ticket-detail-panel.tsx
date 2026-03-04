@@ -25,18 +25,43 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  // Navigation stack for drilling into parent/child tickets
+  const [activeId, setActiveId] = useState<string | null>(ticketId);
+  const [history, setHistory] = useState<string[]>([]);
+
+  // When the external ticketId prop changes, reset internal navigation
+  useEffect(() => {
+    setActiveId(ticketId);
+    setHistory([]);
+  }, [ticketId]);
 
   useEffect(() => {
-    if (!ticketId) {
+    if (!activeId) {
       setTicket(null);
       return;
     }
     setLoading(true);
-    getTicketDetail(ticketId).then((data) => {
+    getTicketDetail(activeId).then((data) => {
       setTicket(data);
       setLoading(false);
     });
-  }, [ticketId]);
+  }, [activeId]);
+
+  const navigateToTicket = useCallback((id: string) => {
+    setActiveId((prev) => {
+      if (prev) setHistory((h) => [...h, prev]);
+      return id;
+    });
+  }, []);
+
+  const navigateBack = useCallback(() => {
+    setHistory((h) => {
+      const next = [...h];
+      const prev = next.pop();
+      if (prev) setActiveId(prev);
+      return next;
+    });
+  }, []);
 
   const handleFieldSave = useCallback(
     (formData: FormData) => {
@@ -49,7 +74,6 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
         );
         if (result.success) {
           setSaveMessage("Saved");
-          // Refresh ticket data
           const updated = await getTicketDetail(ticket.id);
           if (updated) setTicket(updated);
           setTimeout(() => setSaveMessage(null), 2000);
@@ -62,8 +86,13 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
     [ticket, startTransition],
   );
 
+  const handleClose = useCallback(() => {
+    setHistory([]);
+    onClose();
+  }, [onClose]);
+
   return (
-    <Sheet open={!!ticketId} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={!!ticketId} onOpenChange={(open) => !open && handleClose()}>
       <SheetContent data-testid="ticket-detail-panel">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
@@ -76,6 +105,15 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
         ) : (
           <>
             <SheetHeader>
+              {history.length > 0 && (
+                <button
+                  type="button"
+                  onClick={navigateBack}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1 self-start"
+                >
+                  <span aria-hidden>←</span> Back
+                </button>
+              )}
               <div className="flex items-center gap-2">
                 <span
                   className="inline-block h-3 w-3 rounded-full"
@@ -115,6 +153,7 @@ export function TicketDetailPanel({ ticketId, onClose }: Props) {
                   ticket={ticket}
                   onSave={handleFieldSave}
                   isPending={isPending}
+                  onNavigate={navigateToTicket}
                 />
               </TabsContent>
 
@@ -158,10 +197,12 @@ function OverviewTab({
   ticket,
   onSave,
   isPending,
+  onNavigate,
 }: {
   ticket: TicketDetail;
   onSave: (fd: FormData) => void;
   isPending: boolean;
+  onNavigate: (id: string) => void;
 }) {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -293,6 +334,7 @@ function OverviewTab({
         ticket={ticket}
         onSave={onSave}
         isPending={isPending}
+        onNavigate={onNavigate}
       />
 
       {/* Children */}
@@ -303,9 +345,11 @@ function OverviewTab({
           </h3>
           <div className="space-y-1">
             {ticket.children.map((child) => (
-              <div
+              <button
+                type="button"
                 key={child.id}
-                className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm"
+                className="flex w-full items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-accent transition-colors cursor-pointer text-left"
+                onClick={() => onNavigate(child.id)}
               >
                 <span
                   className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
@@ -316,7 +360,7 @@ function OverviewTab({
                 </span>
                 <span className="truncate flex-1">{child.title}</span>
                 <StatusBadge status={child.status} />
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -391,10 +435,12 @@ function ParentSection({
   ticket,
   onSave,
   isPending,
+  onNavigate,
 }: {
   ticket: TicketDetail;
   onSave: (fd: FormData) => void;
   isPending: boolean;
+  onNavigate: (id: string) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -415,14 +461,20 @@ function ParentSection({
       <FieldRow label="Parent">
         {ticket.parent ? (
           <div className="flex items-center gap-2">
-            <span
-              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ backgroundColor: ticket.parent.type.defaultColorHex }}
-            />
-            <span className="text-xs font-medium text-muted-foreground">
-              {ticket.parent.type.key}
-            </span>
-            <span className="truncate text-sm">{ticket.parent.title}</span>
+            <button
+              type="button"
+              className="flex items-center gap-2 min-w-0 hover:underline cursor-pointer"
+              onClick={() => onNavigate(ticket.parent!.id)}
+            >
+              <span
+                className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: ticket.parent.type.defaultColorHex }}
+              />
+              <span className="text-xs font-medium text-muted-foreground">
+                {ticket.parent.type.key}
+              </span>
+              <span className="truncate text-sm">{ticket.parent.title}</span>
+            </button>
             <Button
               variant="ghost"
               size="sm"
