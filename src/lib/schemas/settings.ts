@@ -21,7 +21,7 @@ export const createTicketTypeSchema = z.object({
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Must be a hex color")
     .default("#6366f1"),
-  stepIntervalSeconds: z.coerce.number().int().min(3600, "Minimum step interval is 1 hour (3600s)").max(86400).default(3600),
+  stepIntervalHours: z.coerce.number().int().min(1, "Minimum step interval is 1 hour").max(24).default(1),
 });
 
 export const updateTicketTypeSchema = z.object({
@@ -37,7 +37,7 @@ export const updateTicketTypeSchema = z.object({
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/)
     .optional(),
-  stepIntervalSeconds: z.coerce.number().int().min(3600, "Minimum step interval is 1 hour (3600s)").max(86400).optional(),
+  stepIntervalHours: z.coerce.number().int().min(1, "Minimum step interval is 1 hour").max(24).optional(),
 });
 
 export const deleteTicketTypeSchema = z.object({

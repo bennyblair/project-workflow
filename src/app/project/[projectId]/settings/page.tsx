@@ -38,7 +38,7 @@ export default async function ProjectSettingsPage({ params }: { params: Params }
             name: tt.name,
             key: tt.key,
             defaultColorHex: tt.defaultColorHex,
-            stepIntervalSeconds: tt.stepIntervalSeconds,
+            stepIntervalHours: tt.stepIntervalHours,
           })),
         }}
       />

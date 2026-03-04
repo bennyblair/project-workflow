@@ -15,7 +15,7 @@ type Project = {
     name: string;
     key: string;
     defaultColorHex: string;
-    stepIntervalSeconds: number;
+    stepIntervalHours: number;
   }[];
 };
 

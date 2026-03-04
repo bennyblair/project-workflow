@@ -40,7 +40,7 @@ async function main() {
         name: "Bug",
         key: "BUG",
         defaultColorHex: "#ef4444",
-        stepIntervalSeconds: 3600,
+        stepIntervalHours: 1,
       },
     }),
     prisma.ticketType.create({
@@ -49,7 +49,7 @@ async function main() {
         name: "Task",
         key: "TASK",
         defaultColorHex: "#6366f1",
-        stepIntervalSeconds: 7200,
+        stepIntervalHours: 2,
       },
     }),
     prisma.ticketType.create({
@@ -58,7 +58,7 @@ async function main() {
         name: "Feature",
         key: "FEAT",
         defaultColorHex: "#22c55e",
-        stepIntervalSeconds: 14400,
+        stepIntervalHours: 4,
       },
     }),
   ]);

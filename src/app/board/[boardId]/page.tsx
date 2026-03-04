@@ -69,7 +69,7 @@ export default async function BoardPage({ params }: { params: Params }) {
   const serializeActiveTicket = (t: (typeof board.tickets)[number]) => ({
     ...serializeTicket(t),
     startedAt: t.startedAt?.toISOString() ?? new Date().toISOString(),
-    stepIntervalSeconds: t.type.stepIntervalSeconds,
+    stepIntervalHours: t.type.stepIntervalHours,
   });
 
   return (

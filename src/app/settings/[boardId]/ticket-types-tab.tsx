@@ -15,7 +15,7 @@ type TicketType = {
   name: string;
   key: string;
   defaultColorHex: string;
-  stepIntervalSeconds: number;
+  stepIntervalHours: number;
 };
 
 type Props = {
@@ -53,14 +53,15 @@ function TicketTypeRow({ tt }: { tt: TicketType }) {
           className="h-8 w-12 cursor-pointer p-0.5"
         />
         <Input
-          name="stepIntervalSeconds"
+          name="stepIntervalHours"
           type="number"
-          min={3600}
-          step={3600}
-          defaultValue={tt.stepIntervalSeconds}
+          min={1}
+          max={24}
+          step={1}
+          defaultValue={tt.stepIntervalHours}
           className="h-8 w-24 text-sm"
         />
-        <span className="text-xs text-muted-foreground">s/step ({(tt.stepIntervalSeconds / 3600).toFixed(1)}h)</span>
+        <span className="text-xs text-muted-foreground">hours/step</span>
         <div className="ml-auto flex gap-1">
           <Button type="submit" size="sm" variant="default" disabled={isUpdating}>
             {isUpdating ? "…" : "Save"}
@@ -85,7 +86,7 @@ function TicketTypeRow({ tt }: { tt: TicketType }) {
       <span className="font-medium">{tt.name}</span>
       <span className="text-xs text-muted-foreground">{tt.key}</span>
       <span className="ml-auto text-xs text-muted-foreground">
-        {(tt.stepIntervalSeconds / 3600).toFixed(1)}h per step ({tt.stepIntervalSeconds}s)
+        {tt.stepIntervalHours}h per step
       </span>
       <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
         Edit
@@ -141,8 +142,8 @@ export function TicketTypesTab({ projectId, ticketTypes }: Props) {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium">Step Interval (hours)</label>
-              <Input name="stepIntervalSeconds" type="number" min={3600} step={3600} defaultValue={3600} className="h-8 text-sm" />
-              <p className="text-xs text-muted-foreground">Value in seconds (min 3600 = 1 hour)</p>
+              <Input name="stepIntervalHours" type="number" min={1} max={24} step={1} defaultValue={1} className="h-8 text-sm" />
+              <p className="text-xs text-muted-foreground">Hours per step (1–24)</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

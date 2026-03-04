@@ -6,11 +6,12 @@
  */
 export function computeStepIndex(
   startedAt: Date | string,
-  stepIntervalSeconds: number,
+  stepIntervalHours: number,
   maxSteps: number,
 ): number {
   const start = typeof startedAt === "string" ? new Date(startedAt) : startedAt;
   const elapsedSeconds = (Date.now() - start.getTime()) / 1000;
+  const stepIntervalSeconds = stepIntervalHours * 3600;
   const raw = Math.floor(elapsedSeconds / stepIntervalSeconds);
   return Math.max(0, Math.min(raw, maxSteps - 1));
 }

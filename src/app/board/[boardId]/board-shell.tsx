@@ -39,7 +39,7 @@ type SerializedTicket = {
 
 type ActiveTicket = SerializedTicket & {
   startedAt: string;
-  stepIntervalSeconds: number;
+  stepIntervalHours: number;
 };
 
 type Swimlane = {

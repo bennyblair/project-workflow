@@ -68,7 +68,7 @@ export async function createTicketType(
     name: formData.get("name"),
     key: formData.get("key"),
     defaultColorHex: formData.get("defaultColorHex") || "#6366f1",
-    stepIntervalSeconds: formData.get("stepIntervalSeconds") || "3600",
+    stepIntervalHours: formData.get("stepIntervalHours") || "1",
   });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -100,9 +100,9 @@ export async function updateTicketType(
   const defaultColorHex = formData.get("defaultColorHex");
   if (defaultColorHex !== null && defaultColorHex !== "")
     raw.defaultColorHex = defaultColorHex;
-  const stepIntervalSeconds = formData.get("stepIntervalSeconds");
-  if (stepIntervalSeconds !== null && stepIntervalSeconds !== "")
-    raw.stepIntervalSeconds = stepIntervalSeconds;
+  const stepIntervalHours = formData.get("stepIntervalHours");
+  if (stepIntervalHours !== null && stepIntervalHours !== "")
+    raw.stepIntervalHours = stepIntervalHours;
 
   const parsed = updateTicketTypeSchema.safeParse(raw);
   if (!parsed.success) {

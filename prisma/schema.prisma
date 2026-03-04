@@ -51,7 +51,7 @@ model TicketType {
   name                String
   key                 String   // short key like "BUG", "TASK"
   defaultColorHex     String   @default("#6366f1") // indigo
-  stepIntervalSeconds Int      @default(180)
+  stepIntervalHours Int      @default(1)
   createdAt           DateTime @default(now())
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

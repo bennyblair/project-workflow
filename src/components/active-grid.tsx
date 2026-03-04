@@ -17,7 +17,7 @@ type ActiveTicket = {
   team: { name: string } | null;
   teamId: string | null;
   startedAt: string; // ISO string
-  stepIntervalSeconds: number;
+  stepIntervalHours: number;
 };
 
 type Swimlane = {
@@ -119,7 +119,7 @@ export function ActiveGrid({
     for (const ticket of tickets) {
       const stepIndex = computeStepIndex(
         ticket.startedAt,
-        ticket.stepIntervalSeconds,
+        ticket.stepIntervalHours,
         maxSteps,
       );
 
