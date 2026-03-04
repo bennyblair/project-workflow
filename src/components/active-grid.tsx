@@ -18,6 +18,8 @@ type ActiveTicket = {
   teamId: string | null;
   startedAt: string; // ISO string
   stepIntervalHours: number;
+  hasParent: boolean;
+  childCount: number;
 };
 
 type Swimlane = {
@@ -287,6 +289,16 @@ export function ActiveGrid({
                             <span className="text-[10px] font-semibold text-muted-foreground">
                               {ticket.type.key}
                             </span>
+                            {ticket.hasParent && (
+                              <span className="rounded bg-violet-100 px-1 py-px text-[8px] font-semibold uppercase leading-none text-violet-700">
+                                child
+                              </span>
+                            )}
+                            {ticket.childCount > 0 && (
+                              <span className="rounded bg-amber-100 px-1 py-px text-[8px] font-semibold uppercase leading-none text-amber-700">
+                                parent · {ticket.childCount}
+                              </span>
+                            )}
                             {ticket.team && (
                               <span className="ml-auto text-[10px] text-muted-foreground">
                                 {ticket.team.name}

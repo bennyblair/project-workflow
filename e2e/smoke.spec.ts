@@ -64,10 +64,10 @@ test.describe.serial("FlowLine smoke tests", () => {
     await page.getByTestId("create-project-submit").click();
 
     // Wait for the project section to appear
-    await expect(page.getByText(testProjectName)).toBeVisible({ timeout: 10_000 });
+    const projectSection = page.locator("[data-testid^='project-section-']").filter({ hasText: testProjectName });
+    await expect(projectSection).toBeVisible({ timeout: 10_000 });
 
     // Extract projectId from the project section's data-testid
-    const projectSection = page.locator("[data-testid^='project-section-']").filter({ hasText: testProjectName });
     const testId = await projectSection.getAttribute("data-testid");
     projectId = testId!.replace("project-section-", "");
 

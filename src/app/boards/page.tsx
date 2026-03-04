@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { CreateProjectForm } from "./create-project-form";
 import { ProjectSection } from "./project-section";
+import { ConveyorBelt } from "./conveyor-belt";
+import { TicketBrowser } from "./ticket-browser";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +20,10 @@ export default async function BoardsPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
-      <div className="mb-8 flex items-center justify-between">
+      {/* Conveyor belt hero */}
+      <ConveyorBelt />
+
+      <div className="mt-8 mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Projects</h1>
           <p className="text-muted-foreground">
@@ -52,6 +57,21 @@ export default async function BoardsPage() {
               }}
             />
           ))}
+        </div>
+      )}
+
+      {/* Ticket browser section */}
+      {projects.length > 0 && (
+        <div className="mt-12 space-y-4">
+          <div>
+            <h2 className="text-2xl font-bold">All Tickets</h2>
+            <p className="text-muted-foreground">
+              Search and filter tickets across all boards.
+            </p>
+          </div>
+          <TicketBrowser
+            projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+          />
         </div>
       )}
     </main>

@@ -5,6 +5,8 @@ type TicketCardProps = {
     type: { key: string; defaultColorHex: string };
     assignee?: { name: string } | null;
     team?: { name: string } | null;
+    hasParent?: boolean;
+    childCount?: number;
   };
   variant?: "default" | "done";
   onClick?: () => void;
@@ -29,6 +31,16 @@ export function TicketCard({ ticket, variant = "default", onClick }: TicketCardP
         <span className="text-xs font-semibold text-muted-foreground">
           {ticket.type.key}
         </span>
+        {ticket.hasParent && (
+          <span className="rounded bg-violet-100 px-1 py-0.5 text-[9px] font-semibold uppercase leading-none text-violet-700" title="Has parent ticket">
+            child
+          </span>
+        )}
+        {(ticket.childCount ?? 0) > 0 && (
+          <span className="rounded bg-amber-100 px-1 py-0.5 text-[9px] font-semibold uppercase leading-none text-amber-700" title={`${ticket.childCount} child ticket${ticket.childCount !== 1 ? "s" : ""}`}>
+            parent · {ticket.childCount}
+          </span>
+        )}
         {ticket.team && (
           <span className="ml-auto text-xs text-muted-foreground">
             {ticket.team.name}

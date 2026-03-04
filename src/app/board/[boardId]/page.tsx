@@ -18,7 +18,12 @@ export default async function BoardPage({ params }: { params: Params }) {
         },
       },
       tickets: {
-        include: { type: true, assignee: true, team: true },
+        include: {
+          type: true,
+          assignee: true,
+          team: true,
+          _count: { select: { children: true } },
+        },
         orderBy: { orderKey: "asc" },
       },
       swimlanes: { orderBy: { order: "asc" } },
@@ -64,6 +69,8 @@ export default async function BoardPage({ params }: { params: Params }) {
     assigneeId: t.assigneeId,
     team: t.team ? { name: t.team.name } : null,
     teamId: t.teamId,
+    hasParent: !!t.parentId,
+    childCount: t._count.children,
   });
 
   const serializeActiveTicket = (t: (typeof board.tickets)[number]) => ({

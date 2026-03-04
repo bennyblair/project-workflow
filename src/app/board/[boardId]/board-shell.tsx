@@ -35,6 +35,8 @@ type SerializedTicket = {
   assigneeId: string | null;
   team: { name: string } | null;
   teamId: string | null;
+  hasParent: boolean;
+  childCount: number;
 };
 
 type ActiveTicket = SerializedTicket & {

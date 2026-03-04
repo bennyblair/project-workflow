@@ -10,7 +10,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { searchTickets, type SearchTicketResult } from "@/actions/search-tickets";
+import {
+  searchTickets,
+  getProjectFilterOptions,
+  type SearchTicketResult,
+  type FilterOption,
+  type TicketSearchFilters,
+} from "@/actions/search-tickets";
+import {
+  TicketFilterStrips,
+  type TicketFilters,
+} from "@/components/ticket-filter-strips";
 
 type Props = {
   open: boolean;
@@ -28,38 +38,48 @@ export function LinkParentDialog({
   onSelect,
 }: Props) {
   const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState<TicketFilters>({});
+  const [filterOptions, setFilterOptions] = useState<FilterOption | null>(null);
   const [results, setResults] = useState<SearchTicketResult[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Load filter options once when dialog opens
+  useEffect(() => {
+    if (!open) return;
+    getProjectFilterOptions(projectId).then(setFilterOptions);
+  }, [open, projectId]);
+
   const doSearch = useCallback(
-    async (q: string) => {
+    async (q: string, f: TicketSearchFilters) => {
       setLoading(true);
-      const data = await searchTickets(projectId, q, ticketId);
+      const data = await searchTickets(projectId, q, ticketId, f);
       setResults(data);
       setLoading(false);
     },
     [projectId, ticketId],
   );
 
-  // Load all tickets on open, and debounce search on input
+  // Load all tickets on open
   useEffect(() => {
     if (!open) {
       setQuery("");
+      setFilters({});
       setResults([]);
       return;
     }
-    doSearch("");
+    doSearch("", {});
   }, [open, doSearch]);
 
+  // Debounce search on query/filter change
   useEffect(() => {
     if (!open) return;
-    const timer = setTimeout(() => doSearch(query), 300);
+    const timer = setTimeout(() => doSearch(query, filters), 300);
     return () => clearTimeout(timer);
-  }, [query, open, doSearch]);
+  }, [query, filters, open, doSearch]);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Link Parent Ticket</DialogTitle>
           <DialogDescription>
@@ -75,6 +95,16 @@ export function LinkParentDialog({
           className="mt-2"
         />
 
+        {filterOptions && (
+          <div className="mt-2">
+            <TicketFilterStrips
+              options={filterOptions}
+              filters={filters}
+              onChange={setFilters}
+            />
+          </div>
+        )}
+
         <div className="mt-3 flex-1 overflow-y-auto max-h-[50vh] space-y-1">
           {loading ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
@@ -82,7 +112,9 @@ export function LinkParentDialog({
             </p>
           ) : results.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              {query ? "No tickets found" : "No other tickets in this project"}
+              {query || Object.values(filters).some(Boolean)
+                ? "No tickets found"
+                : "No other tickets in this project"}
             </p>
           ) : (
             results.map((t) => (

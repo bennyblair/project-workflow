@@ -30,3 +30,12 @@
     font-family: Arial, Helvetica, sans-serif;
   }
 }
+
+@keyframes conveyor {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@utility animate-conveyor {
+  animation: conveyor 20s linear infinite;
+}
