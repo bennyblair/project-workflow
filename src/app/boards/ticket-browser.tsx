@@ -68,17 +68,17 @@ export function TicketBrowser({ projects }: Props) {
         {/* Project selector (if multiple projects) */}
         {projects.length > 1 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="font-[Orbitron] text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
               Project
             </span>
             {projects.map((p) => (
               <button
                 key={p.id}
                 type="button"
-                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                className={`rounded-full border px-2.5 py-0.5 font-[Orbitron] text-[9px] font-bold tracking-wide transition-all ${
                   selectedProjectId === p.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:bg-muted/60"
+                    ? "border-neon-pink bg-neon-pink/15 text-neon-pink shadow-[0_0_10px_oklch(0.65_0.28_340_/_0.3)]"
+                    : "border-border text-foreground hover:border-neon-cyan/40 hover:bg-neon-cyan/5"
                 }`}
                 onClick={() => setSelectedProjectId(p.id)}
               >
@@ -132,7 +132,7 @@ export function TicketBrowser({ projects }: Props) {
                     className="inline-block h-3 w-3 shrink-0 rounded-full"
                     style={{ backgroundColor: t.type.defaultColorHex }}
                   />
-                  <span className="font-medium text-muted-foreground shrink-0">
+                  <span className="font-[Orbitron] text-[10px] font-bold text-neon-yellow shrink-0">
                     {t.type.key}
                   </span>
                   <span className="truncate flex-1">{t.title}</span>
@@ -167,14 +167,14 @@ export function TicketBrowser({ projects }: Props) {
 
 function StatusPill({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    TODO: "bg-yellow-100 text-yellow-800",
-    ACTIVE: "bg-blue-100 text-blue-800",
-    DONE: "bg-green-100 text-green-800",
+    TODO: "text-neon-cyan border border-neon-cyan/40 bg-neon-cyan/10",
+    ACTIVE: "text-neon-green border border-neon-green/40 bg-neon-green/10",
+    DONE: "text-muted-foreground border border-border bg-muted/30",
   };
   return (
     <span
-      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
-        colors[status] ?? "bg-gray-100 text-gray-800"
+      className={`shrink-0 rounded-full px-2 py-0.5 font-[Orbitron] text-[8px] font-bold uppercase tracking-wider ${
+        colors[status] ?? "text-muted-foreground border border-border bg-muted/30"
       }`}
     >
       {status}

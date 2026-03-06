@@ -85,7 +85,7 @@ export function TicketFilterStrips({
       {Object.values(filters).some(Boolean) && (
         <button
           type="button"
-          className="rounded-full border border-dashed border-muted-foreground/40 px-2.5 py-0.5 text-xs text-muted-foreground hover:bg-muted/50 transition-colors"
+          className="rounded-full border border-dashed border-neon-pink/30 px-2.5 py-0.5 font-[Orbitron] text-[9px] font-bold text-neon-pink/60 hover:bg-neon-pink/10 hover:text-neon-pink transition-all"
           onClick={() => onChange({})}
         >
           Clear all
@@ -114,7 +114,7 @@ function FilterStrip({
 }) {
   return (
     <div className="flex items-center gap-0.5">
-      <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="mr-1 font-[Orbitron] text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
       {items.map((item) => {
@@ -123,10 +123,10 @@ function FilterStrip({
           <button
             key={item.id}
             type="button"
-            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-[Orbitron] text-[9px] font-bold tracking-wide transition-all ${
               isActive
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-foreground hover:bg-muted/60"
+                ? "border-neon-pink bg-neon-pink/15 text-neon-pink shadow-[0_0_10px_oklch(0.65_0.28_340_/_0.3)]"
+                : "border-border text-foreground hover:border-neon-cyan/40 hover:bg-neon-cyan/5 hover:shadow-[0_0_8px_oklch(0.82_0.16_195_/_0.15)]"
             }`}
             onClick={() => onSelect(isActive ? undefined : item.id)}
           >

@@ -1,41 +1,88 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.205 0.08 265);
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.965 0 0);
-  --color-secondary-foreground: oklch(0.205 0 0);
-  --color-muted: oklch(0.965 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
-  --color-accent: oklch(0.965 0 0);
-  --color-accent-foreground: oklch(0.205 0 0);
+  /* ── 90s Neon Arcade palette ── */
+  --color-background: oklch(0.13 0.04 290);
+  --color-foreground: oklch(0.92 0 0);
+  --color-card: oklch(0.16 0.05 290);
+  --color-card-foreground: oklch(0.92 0 0);
+  --color-primary: oklch(0.65 0.28 340);
+  --color-primary-foreground: oklch(0.98 0 0);
+  --color-secondary: oklch(0.22 0.05 290);
+  --color-secondary-foreground: oklch(0.85 0 0);
+  --color-muted: oklch(0.20 0.04 290);
+  --color-muted-foreground: oklch(0.55 0 0);
+  --color-accent: oklch(0.22 0.06 290);
+  --color-accent-foreground: oklch(0.90 0 0);
   --color-destructive: oklch(0.577 0.245 27.33);
   --color-destructive-foreground: oklch(0.985 0 0);
-  --color-border: oklch(0.922 0 0);
-  --color-input: oklch(0.922 0 0);
-  --color-ring: oklch(0.708 0.165 254.6);
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  --color-border: oklch(0.28 0.06 300);
+  --color-input: oklch(0.24 0.05 300);
+  --color-ring: oklch(0.65 0.28 340);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Neon accent colors */
+  --color-neon-pink: oklch(0.65 0.28 340);
+  --color-neon-cyan: oklch(0.82 0.16 195);
+  --color-neon-green: oklch(0.82 0.24 145);
+  --color-neon-purple: oklch(0.60 0.24 300);
+  --color-neon-yellow: oklch(0.88 0.16 90);
 }
 
 @layer base {
   body {
     @apply bg-background text-foreground;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Orbitron', 'Rajdhani', system-ui, sans-serif;
   }
 }
 
+/* ── Animated grid background ── */
+@layer base {
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridShift 8s linear infinite;
+  }
+}
+
+/* ── Keyframes ── */
 @keyframes conveyor {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 
+@keyframes gridShift {
+  to { background-position: 40px 40px; }
+}
+
+@keyframes neonPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-5px); }
+}
+
 @utility animate-conveyor {
-  animation: conveyor 20s linear infinite;
+  animation: conveyor 14s linear infinite;
+}
+
+@utility animate-neon-pulse {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+@utility animate-float {
+  animation: floatUp 2s ease-in-out infinite alternate;
 }

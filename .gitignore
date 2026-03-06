@@ -23,3 +23,4 @@ playwright-report/
 
 # docker
 postgres-data/
+tmp-mockups/
