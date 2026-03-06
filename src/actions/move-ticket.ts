@@ -319,7 +319,7 @@ export async function moveTicketToDone(
 }
 
 // ---------------------------------------------------------------------------
-// moveTicketToTodo — DONE → TODO
+// moveTicketToTodo — ACTIVE → TODO  or  DONE → TODO
 // ---------------------------------------------------------------------------
 
 export async function moveTicketToTodo(
@@ -330,8 +330,8 @@ export async function moveTicketToTodo(
     select: { id: true, status: true, boardId: true },
   });
   if (!ticket) return { success: false, error: "Ticket not found" };
-  if (ticket.status !== "DONE") {
-    return { success: false, error: "Only DONE tickets can be moved to TODO" };
+  if (ticket.status !== "DONE" && ticket.status !== "ACTIVE") {
+    return { success: false, error: "Only ACTIVE or DONE tickets can be moved to TODO" };
   }
 
   const orderKey = await nextOrderKey(ticket.boardId, "TODO");
@@ -350,7 +350,7 @@ export async function moveTicketToTodo(
       data: {
         ticketId,
         type: "STATUS_CHANGED",
-        dataJson: { from: "DONE", to: "TODO" },
+        dataJson: { from: ticket.status, to: "TODO" },
       },
     }),
   ]);

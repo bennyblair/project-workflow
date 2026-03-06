@@ -165,10 +165,9 @@ export function BoardShell({
           }
         } else if (targetZone === "todo") {
           if (sourceZone === "todo") return; // already todo
-          if (sourceZone === "done") {
+          if (sourceZone === "done" || sourceZone === "active") {
             result = await moveTicketToTodo(ticketId);
           } else {
-            // ACTIVE → TODO not in spec, ignore
             return;
           }
         } else {
