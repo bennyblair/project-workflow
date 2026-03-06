@@ -20,30 +20,18 @@ export default async function BoardsPage() {
 
   return (
     <main className="relative z-[1] mx-auto max-w-7xl px-6 py-12">
-      {/* Neon title */}
-      <h1
-        className="text-center font-[Audiowide] text-4xl tracking-[6px] text-white"
-        style={{
-          textShadow:
-            "0 0 10px oklch(0.65 0.28 340), 0 0 40px oklch(0.65 0.28 340), 0 0 80px oklch(0.65 0.28 340 / 0.4)",
-        }}
-      >
-        FLOWLINE
-      </h1>
-      <p className="mt-1 text-center font-[Orbitron] text-[10px] tracking-[6px] uppercase text-neon-cyan animate-neon-pulse">
-        workflow command center
-      </p>
+      {/* RPG dialog-box title */}
+      <div className="mx-auto w-fit rounded border-4 border-rpg-wood bg-rpg-parchment px-6 py-4 shadow-[4px_4px_0_#92400e]">
+        <h1 className="text-center font-['Press_Start_2P'] text-xl text-rpg-brown">
+          ⚔️ FLOWLINE
+        </h1>
+        <p className="mt-2 text-center text-xs tracking-[2px] text-rpg-dark-green">
+          ~ Your Quest Log Awaits ~
+        </p>
+      </div>
 
-      {/* Neon divider */}
-      <div
-        className="mx-auto my-6 h-[2px] max-w-md rounded"
-        style={{
-          background:
-            "linear-gradient(90deg, transparent, oklch(0.65 0.28 340), oklch(0.82 0.16 195), oklch(0.82 0.24 145), transparent)",
-          boxShadow:
-            "0 0 8px oklch(0.65 0.28 340 / 0.3), 0 0 20px oklch(0.82 0.16 195 / 0.2)",
-        }}
-      />
+      {/* Gold divider */}
+      <div className="mx-auto my-6 h-[3px] max-w-xs rounded bg-rpg-gold" />
 
       {/* Conveyor belt hero */}
       <ConveyorBelt />
@@ -53,17 +41,10 @@ export default async function BoardsPage() {
         <div>
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h2
-                className="font-[Orbitron] text-lg font-bold tracking-[2px]"
-                style={{
-                  background: "linear-gradient(90deg, oklch(0.65 0.28 340), oklch(0.82 0.16 195))",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                ⬡ PROJECTS
+              <h2 className="font-['Press_Start_2P'] text-sm text-rpg-brown border-b-[3px] border-rpg-gold pb-1">
+                🏰 PROJECTS
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-rpg-stone">
                 Manage your projects and their workflow boards.
               </p>
             </div>
@@ -100,20 +81,14 @@ export default async function BoardsPage() {
 
         {/* Right column — All Tickets */}
         {projects.length > 0 && (
-          <div className="space-y-4 lg:sticky lg:top-6 lg:self-start rounded-2xl border border-neon-green/20 bg-card p-5" style={{ boxShadow: "0 0 15px oklch(0.82 0.24 145 / 0.05)" }}>
+          <div className="relative space-y-4 lg:sticky lg:top-6 lg:self-start rounded-md border-4 border-rpg-dark-green bg-rpg-parchment p-5 shadow-[4px_4px_0_rgba(22,101,52,0.3)]">
+            <span className="absolute -top-3 right-3 text-xl">📜</span>
             <div>
-              <h2
-                className="font-[Orbitron] text-lg font-bold tracking-[2px]"
-                style={{
-                  background: "linear-gradient(90deg, oklch(0.82 0.24 145), oklch(0.82 0.16 195))",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                ⬡ ALL TICKETS
+              <h2 className="font-['Press_Start_2P'] text-sm text-rpg-brown border-b-[3px] border-rpg-gold pb-1">
+                📜 QUEST LOG
               </h2>
-              <p className="text-xs text-muted-foreground tracking-wide">
-                Search and filter tickets across all boards.
+              <p className="mt-1 text-xs text-rpg-stone tracking-wide">
+                Search and filter quests across all boards.
               </p>
             </div>
             <TicketBrowser
@@ -123,16 +98,8 @@ export default async function BoardsPage() {
         )}
       </div>
 
-      {/* Bottom neon divider */}
-      <div
-        className="mx-auto mt-12 h-[2px] max-w-md rounded"
-        style={{
-          background:
-            "linear-gradient(90deg, transparent, oklch(0.65 0.28 340), oklch(0.82 0.16 195), oklch(0.82 0.24 145), transparent)",
-          boxShadow:
-            "0 0 8px oklch(0.65 0.28 340 / 0.3), 0 0 20px oklch(0.82 0.16 195 / 0.2)",
-        }}
-      />
+      {/* Gold divider */}
+      <div className="mx-auto mt-12 h-[3px] max-w-xs rounded bg-rpg-gold" />
     </main>
   );
 }

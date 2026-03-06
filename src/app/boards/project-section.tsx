@@ -27,30 +27,21 @@ export function ProjectSection({ project }: ProjectSectionProps) {
   return (
     <Card
       data-testid={`project-section-${project.id}`}
-      className="relative overflow-hidden border-neon-pink/30 bg-card backdrop-blur-sm"
-      style={{ boxShadow: "0 0 15px oklch(0.65 0.28 340 / 0.08), inset 0 1px 0 rgba(255,255,255,0.05)" }}
+      className="relative overflow-hidden border-4 border-rpg-wood bg-rpg-parchment"
+      style={{ boxShadow: "4px 4px 0 rgba(146,64,14,0.3)" }}
     >
-      {/* Neon edge glow overlay */}
-      <div
-        className="pointer-events-none absolute inset-[-1px] rounded-xl"
-        style={{
-          padding: "1px",
-          background: "linear-gradient(135deg, oklch(0.65 0.28 340), transparent 40%, transparent 60%, oklch(0.82 0.16 195))",
-          WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-          WebkitMaskComposite: "xor",
-          maskComposite: "exclude",
-        }}
-      />
+      {/* Diamond decorator */}
+      <div className="pointer-events-none absolute -top-1.5 left-3 bg-rpg-parchment px-1 font-['Press_Start_2P'] text-[10px] text-rpg-gold">◆</div>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="font-[Orbitron] text-base font-bold text-white">{project.name}</CardTitle>
+          <CardTitle className="font-['Press_Start_2P'] text-xs text-rpg-brown">{project.name}</CardTitle>
           <CardDescription>
             {project.boards.length} board{project.boards.length !== 1 && "s"} ·{" "}
             {project.ticketTypeCount} ticket type{project.ticketTypeCount !== 1 && "s"}
           </CardDescription>
         </div>
         <Link href={`/project/${project.id}/settings`}>
-          <Button variant="ghost" size="sm" className="text-neon-cyan hover:text-neon-cyan/80">
+          <Button variant="ghost" size="sm" className="text-rpg-dark-green hover:text-rpg-dark-green/80">
             Project Settings
           </Button>
         </Link>

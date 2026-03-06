@@ -1,19 +1,19 @@
 "use client";
 
 /**
- * Neon arcade conveyor-belt animation — colorful gradient boxes
- * rolling across glowing rollers. Pure CSS animation.
+ * 16-Bit RPG mine-cart railway — colorful bouncing boxes
+ * rolling along wooden rails. Pure CSS animation.
  */
 export function ConveyorBelt() {
   const boxes = [
-    { color: "linear-gradient(135deg, #6366f1, #4338ca)", label: "BUG" },
-    { color: "linear-gradient(135deg, #f59e0b, #d97706)", label: "TASK" },
-    { color: "linear-gradient(135deg, #10b981, #059669)", label: "FEAT" },
-    { color: "linear-gradient(135deg, #ef4444, #dc2626)", label: "BUG" },
-    { color: "linear-gradient(135deg, #8b5cf6, #7c3aed)", label: "TASK" },
-    { color: "linear-gradient(135deg, #3b82f6, #2563eb)", label: "FEAT" },
-    { color: "linear-gradient(135deg, #f97316, #ea580c)", label: "BUG" },
-    { color: "linear-gradient(135deg, #14b8a6, #0d9488)", label: "TASK" },
+    { color: "#6366f1", label: "BUG" },
+    { color: "#f59e0b", label: "TASK" },
+    { color: "#10b981", label: "FEAT" },
+    { color: "#ef4444", label: "BUG" },
+    { color: "#8b5cf6", label: "TASK" },
+    { color: "#3b82f6", label: "FEAT" },
+    { color: "#f97316", label: "BUG" },
+    { color: "#14b8a6", label: "TASK" },
   ];
 
   // Duplicate for seamless loop
@@ -21,61 +21,46 @@ export function ConveyorBelt() {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl border border-neon-cyan/20 py-6"
+      className="relative w-full overflow-hidden rounded-lg border-4 border-rpg-wood py-4"
       style={{
-        background: "linear-gradient(135deg, oklch(0.12 0.04 290), oklch(0.18 0.06 290))",
-        boxShadow: "0 0 30px oklch(0.82 0.16 195 / 0.06)",
+        background: "linear-gradient(180deg, #fef9c3, #fde68a)",
+        boxShadow: "4px 4px 0 rgba(146,64,14,0.3)",
       }}
     >
-      {/* Factory title */}
-      <div className="absolute top-2 left-4 font-[Orbitron] text-[8px] font-bold tracking-[3px] text-neon-cyan/40">
-        ⚡ PRODUCTION LINE
+      {/* Railway label */}
+      <div className="absolute top-1 left-3 font-['Press_Start_2P'] text-[7px] text-rpg-wood/60">
+        🛤️ TICKET RAILWAY
       </div>
 
-      {/* Conveyor track */}
-      <div className="relative mx-8 mt-4">
-        {/* Moving boxes */}
-        <div className="flex animate-conveyor gap-5">
+      {/* Track with moving boxes */}
+      <div className="relative mx-6 mt-4">
+        <div className="flex animate-conveyor gap-4">
           {allBoxes.map((box, i) => (
             <div
               key={i}
-              className="relative flex h-[52px] w-[72px] shrink-0 items-center justify-center rounded-lg shadow-lg"
+              className="flex h-12 w-[60px] shrink-0 items-center justify-center rounded border-[3px] border-black/20 shadow-[2px_2px_0_rgba(0,0,0,0.15)]"
               style={{
                 background: box.color,
-                animation: `floatBox ${2 + (i % 3) * 0.3}s ease-in-out infinite alternate`,
-                boxShadow: "0 4px 15px rgba(0,0,0,0.4)",
+                animation: `bounce 0.8s ease-in-out infinite alternate ${i % 2 ? "0.3s" : "0s"}`,
               }}
             >
-              <span className="font-[Orbitron] text-[9px] font-bold text-white/90 select-none">
+              <span className="font-['Press_Start_2P'] text-[7px] text-white select-none">
                 {box.label}
               </span>
-              {/* Shine overlay */}
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/15 to-transparent" />
             </div>
           ))}
         </div>
 
-        {/* Roller drums */}
-        <div className="mt-2 flex items-center justify-around">
+        {/* Wooden railroad ties */}
+        <div className="mt-2 flex justify-around px-2">
           {Array.from({ length: 16 }).map((_, i) => (
             <div
               key={i}
-              className="h-3 w-3 rounded-full border-2 border-neon-cyan/20 bg-neon-cyan/5"
-              style={{ animation: "spin 0.8s linear infinite" }}
+              className="h-1.5 w-6 rounded-sm bg-rpg-wood"
             />
           ))}
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes floatBox {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-5px); }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

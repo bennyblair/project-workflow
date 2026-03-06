@@ -85,7 +85,7 @@ export function TicketFilterStrips({
       {Object.values(filters).some(Boolean) && (
         <button
           type="button"
-          className="rounded-full border border-dashed border-neon-pink/30 px-2.5 py-0.5 font-[Orbitron] text-[9px] font-bold text-neon-pink/60 hover:bg-neon-pink/10 hover:text-neon-pink transition-all"
+          className="rounded-full border border-dashed border-rpg-red/30 px-2.5 py-0.5 font-['Press_Start_2P'] text-[7px] text-rpg-red/60 hover:bg-rpg-red/10 hover:text-rpg-red transition-all"
           onClick={() => onChange({})}
         >
           Clear all
@@ -114,7 +114,7 @@ function FilterStrip({
 }) {
   return (
     <div className="flex items-center gap-0.5">
-      <span className="mr-1 font-[Orbitron] text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span className="mr-1 font-['Press_Start_2P'] text-[7px] uppercase tracking-wider text-rpg-stone">
         {label}
       </span>
       {items.map((item) => {
@@ -123,10 +123,10 @@ function FilterStrip({
           <button
             key={item.id}
             type="button"
-            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-[Orbitron] text-[9px] font-bold tracking-wide transition-all ${
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-['Press_Start_2P'] text-[7px] tracking-wide transition-all ${
               isActive
-                ? "border-neon-pink bg-neon-pink/15 text-neon-pink shadow-[0_0_10px_oklch(0.65_0.28_340_/_0.3)]"
-                : "border-border text-foreground hover:border-neon-cyan/40 hover:bg-neon-cyan/5 hover:shadow-[0_0_8px_oklch(0.82_0.16_195_/_0.15)]"
+                ? "border-rpg-gold bg-rpg-gold/15 text-rpg-wood shadow-[2px_2px_0_rgba(251,191,36,0.3)]"
+                : "border-border text-foreground hover:border-rpg-blue/40 hover:bg-rpg-blue/5 hover:shadow-[1px_1px_0_rgba(59,130,246,0.15)]"
             }`}
             onClick={() => onSelect(isActive ? undefined : item.id)}
           >

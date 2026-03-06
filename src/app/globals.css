@@ -1,57 +1,74 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* ── 90s Neon Arcade palette ── */
-  --color-background: oklch(0.13 0.04 290);
-  --color-foreground: oklch(0.92 0 0);
-  --color-card: oklch(0.16 0.05 290);
-  --color-card-foreground: oklch(0.92 0 0);
-  --color-primary: oklch(0.65 0.28 340);
-  --color-primary-foreground: oklch(0.98 0 0);
-  --color-secondary: oklch(0.22 0.05 290);
-  --color-secondary-foreground: oklch(0.85 0 0);
-  --color-muted: oklch(0.20 0.04 290);
-  --color-muted-foreground: oklch(0.55 0 0);
-  --color-accent: oklch(0.22 0.06 290);
-  --color-accent-foreground: oklch(0.90 0 0);
-  --color-destructive: oklch(0.577 0.245 27.33);
-  --color-destructive-foreground: oklch(0.985 0 0);
-  --color-border: oklch(0.28 0.06 300);
-  --color-input: oklch(0.24 0.05 300);
-  --color-ring: oklch(0.65 0.28 340);
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* ── 16-Bit RPG palette ── */
+  --color-background: #e0f2fe;
+  --color-foreground: #1e293b;
+  --color-card: #fef3c7;
+  --color-card-foreground: #1e293b;
+  --color-primary: #f59e0b;
+  --color-primary-foreground: #451a03;
+  --color-secondary: #fef9c3;
+  --color-secondary-foreground: #92400e;
+  --color-muted: #f5f0e0;
+  --color-muted-foreground: #78716c;
+  --color-accent: #fef3c7;
+  --color-accent-foreground: #92400e;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #c4956a;
+  --color-input: #b8864a;
+  --color-ring: #fbbf24;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 
-  /* Neon accent colors */
-  --color-neon-pink: oklch(0.65 0.28 340);
-  --color-neon-cyan: oklch(0.82 0.16 195);
-  --color-neon-green: oklch(0.82 0.24 145);
-  --color-neon-purple: oklch(0.60 0.24 300);
-  --color-neon-yellow: oklch(0.88 0.16 90);
+  /* RPG accent colors */
+  --color-rpg-sky: #87ceeb;
+  --color-rpg-grass: #4ade80;
+  --color-rpg-gold: #fbbf24;
+  --color-rpg-wood: #92400e;
+  --color-rpg-brown: #451a03;
+  --color-rpg-blue: #3b82f6;
+  --color-rpg-red: #ef4444;
+  --color-rpg-stone: #78716c;
+  --color-rpg-parchment: #fef3c7;
+  --color-rpg-dark-green: #166534;
 }
 
 @layer base {
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Orbitron', 'Rajdhani', system-ui, sans-serif;
+    @apply text-foreground;
+    font-family: 'Quicksand', system-ui, sans-serif;
+    background: linear-gradient(180deg, #7dd3fc 0%, #bae6fd 40%, #e0f2fe 60%, #bbf7d0 85%, #4ade80 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 }
 
-/* ── Animated grid background ── */
+/* ── Floating clouds ── */
 @layer base {
-  body::before {
-    content: '';
+  body::before,
+  body::after {
+    content: '☁';
     position: fixed;
-    inset: 0;
     z-index: 0;
     pointer-events: none;
-    background:
-      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: gridShift 8s linear infinite;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 70px;
+    animation: drift 35s linear infinite;
+  }
+  body::before {
+    top: 5%;
+    font-size: 60px;
+    animation-duration: 30s;
+  }
+  body::after {
+    top: 12%;
+    font-size: 45px;
+    animation-duration: 42s;
+    animation-delay: -16s;
   }
 }
 
@@ -61,28 +78,20 @@
   100% { transform: translateX(-50%); }
 }
 
-@keyframes gridShift {
-  to { background-position: 40px 40px; }
+@keyframes drift {
+  0% { transform: translateX(-120px); }
+  100% { transform: translateX(calc(100vw + 120px)); }
 }
 
-@keyframes neonPulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
-
-@keyframes floatUp {
+@keyframes bounce {
   0% { transform: translateY(0); }
-  100% { transform: translateY(-5px); }
+  100% { transform: translateY(-3px); }
 }
 
 @utility animate-conveyor {
   animation: conveyor 14s linear infinite;
 }
 
-@utility animate-neon-pulse {
-  animation: neonPulse 2s ease-in-out infinite;
-}
-
-@utility animate-float {
-  animation: floatUp 2s ease-in-out infinite alternate;
+@utility animate-bounce-rpg {
+  animation: bounce 0.8s ease-in-out infinite alternate;
 }
