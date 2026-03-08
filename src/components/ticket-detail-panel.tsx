@@ -366,6 +366,13 @@ function OverviewTab({
         </div>
       )}
 
+      {/* Description */}
+      <DescriptionSection
+        ticket={ticket}
+        onSave={onSave}
+        isPending={isPending}
+      />
+
       {/* Timestamps */}
       <div className="mt-6 space-y-2 border-t pt-4">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -396,13 +403,6 @@ function OverviewTab({
           </FieldRow>
         )}
       </div>
-
-      {/* Description */}
-      <DescriptionSection
-        ticket={ticket}
-        onSave={onSave}
-        isPending={isPending}
-      />
 
       {/* Audit Log */}
       <AuditLogSection events={ticket.events} />

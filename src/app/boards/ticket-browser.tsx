@@ -67,15 +67,16 @@ export function TicketBrowser({ projects }: Props) {
       <div className="space-y-3">
         {/* Project selector (if multiple projects) */}
         {projects.length > 1 && (
-          <div className="flex items-center gap-2">
-            <span className="font-['Press_Start_2P'] text-[9px] uppercase tracking-wider text-rpg-stone">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin">
+            <span className="font-['Press_Start_2P'] text-[9px] uppercase tracking-wider text-rpg-stone shrink-0">
               Project
             </span>
+            <div className="flex items-center gap-2 min-w-0">
             {projects.map((p) => (
               <button
                 key={p.id}
                 type="button"
-                className={`rounded-full border px-2.5 py-0.5 font-['Press_Start_2P'] text-[7px] tracking-wide transition-all ${
+                className={`shrink-0 rounded-full border px-2.5 py-0.5 font-['Press_Start_2P'] text-[7px] tracking-wide transition-all ${
                   selectedProjectId === p.id
                     ? "border-rpg-gold bg-rpg-gold/15 text-rpg-wood shadow-[2px_2px_0_rgba(251,191,36,0.3)]"
                     : "border-border text-foreground hover:border-rpg-blue/40 hover:bg-rpg-blue/5"
@@ -85,6 +86,7 @@ export function TicketBrowser({ projects }: Props) {
                 {p.name}
               </button>
             ))}
+            </div>
           </div>
         )}
 

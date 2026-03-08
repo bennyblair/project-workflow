@@ -11,7 +11,7 @@ export default async function BoardsPage() {
     orderBy: { createdAt: "desc" },
     include: {
       boards: {
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
         include: { _count: { select: { tickets: true } } },
       },
       _count: { select: { ticketTypes: true } },
@@ -71,6 +71,7 @@ export default async function BoardsPage() {
                       ticketCount: board._count.tickets,
                       maxSteps: board.maxSteps,
                       refreshIntervalSeconds: board.refreshIntervalSeconds,
+                      sortOrder: board.sortOrder,
                     })),
                   }}
                 />

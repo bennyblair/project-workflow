@@ -1,10 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BoardCard } from "./board-card";
 import { CreateBoardForm } from "./create-board-form";
+import { reorderBoards } from "@/actions/reorder-boards";
 
 type Board = {
   id: string;
@@ -12,6 +29,7 @@ type Board = {
   ticketCount: number;
   maxSteps: number;
   refreshIntervalSeconds: number;
+  sortOrder: number;
 };
 
 type ProjectSectionProps = {
@@ -24,6 +42,28 @@ type ProjectSectionProps = {
 };
 
 export function ProjectSection({ project }: ProjectSectionProps) {
+  const [boards, setBoards] = useState<Board[]>(project.boards);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = boards.findIndex((b) => b.id === active.id);
+    const newIndex = boards.findIndex((b) => b.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(boards, oldIndex, newIndex);
+    setBoards(reordered);
+
+    // Persist new order
+    const boardOrders = reordered.map((b, i) => ({ id: b.id, sortOrder: i }));
+    await reorderBoards(boardOrders);
+  }
+
   return (
     <Card
       data-testid={`project-section-${project.id}`}
@@ -36,7 +76,7 @@ export function ProjectSection({ project }: ProjectSectionProps) {
         <div>
           <CardTitle className="font-['Press_Start_2P'] text-xs text-rpg-brown">{project.name}</CardTitle>
           <CardDescription>
-            {project.boards.length} board{project.boards.length !== 1 && "s"} ·{" "}
+            {boards.length} board{boards.length !== 1 && "s"} ·{" "}
             {project.ticketTypeCount} ticket type{project.ticketTypeCount !== 1 && "s"}
           </CardDescription>
         </div>
@@ -49,18 +89,53 @@ export function ProjectSection({ project }: ProjectSectionProps) {
       <CardContent>
         <CreateBoardForm projectId={project.id} />
 
-        {project.boards.length === 0 ? (
+        {boards.length === 0 ? (
           <p className="mt-4 text-sm text-muted-foreground">
             No boards yet. Create one above.
           </p>
         ) : (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {project.boards.map((board) => (
-              <BoardCard key={board.id} board={board} />
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={boards.map((b) => b.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {boards.map((board) => (
+                  <SortableBoardCard key={board.id} board={board} />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function SortableBoardCard({ board }: { board: Board }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: board.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <BoardCard board={board} />
+    </div>
   );
 }

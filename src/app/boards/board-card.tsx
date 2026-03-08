@@ -17,7 +17,7 @@ type BoardCardProps = {
 export function BoardCard({ board }: BoardCardProps) {
   return (
     <Card
-      className="relative overflow-hidden border-[3px] border-rpg-gold transition-all hover:border-rpg-gold/80 hover:-translate-y-0.5"
+      className="relative overflow-hidden border-[3px] border-rpg-gold transition-all hover:border-rpg-gold/80 hover:-translate-y-0.5 cursor-grab active:cursor-grabbing"
       data-testid={`board-card-${board.id}`}
       style={{ boxShadow: "2px 2px 0 rgba(251,191,36,0.3)" }}
     >

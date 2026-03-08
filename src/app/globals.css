@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Disable automatic dark mode — our RPG theme is always light */
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   /* ── 16-Bit RPG palette ── */
   --color-background: #e0f2fe;
