@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TicketTypesTab } from "@/app/settings/[boardId]/ticket-types-tab";
+import { DescriptionTemplatesTab } from "./description-templates-tab";
 import { updateProject, type ActionState } from "@/actions/project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ export function ProjectSettingsTabs({ project }: { project: Project }) {
       <TabsList className="mb-6">
         <TabsTrigger value="project">Project</TabsTrigger>
         <TabsTrigger value="ticket-types">Ticket Types</TabsTrigger>
+        <TabsTrigger value="description-templates">Description Templates</TabsTrigger>
       </TabsList>
 
       <TabsContent value="project">
@@ -56,6 +58,10 @@ export function ProjectSettingsTabs({ project }: { project: Project }) {
 
       <TabsContent value="ticket-types">
         <TicketTypesTab projectId={project.id} ticketTypes={project.ticketTypes} />
+      </TabsContent>
+
+      <TabsContent value="description-templates">
+        <DescriptionTemplatesTab projectId={project.id} />
       </TabsContent>
     </Tabs>
   );

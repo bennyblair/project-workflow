@@ -1,14 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { CreateProjectForm } from "./create-project-form";
-import { ProjectSection } from "./project-section";
 import { ConveyorBelt } from "./conveyor-belt";
 import { TicketBrowser } from "./ticket-browser";
+import { SortableProjectList } from "./sortable-project-list";
 
 export const dynamic = "force-dynamic";
 
 export default async function BoardsPage() {
   const projects = await prisma.project.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     include: {
       boards: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
@@ -57,26 +57,21 @@ export default async function BoardsPage() {
               No projects yet. Create one above to get started.
             </p>
           ) : (
-            <div className="mt-6 space-y-8">
-              {projects.map((project) => (
-                <ProjectSection
-                  key={project.id}
-                  project={{
-                    id: project.id,
-                    name: project.name,
-                    ticketTypeCount: project._count.ticketTypes,
-                    boards: project.boards.map((board) => ({
-                      id: board.id,
-                      name: board.name,
-                      ticketCount: board._count.tickets,
-                      maxSteps: board.maxSteps,
-                      refreshIntervalSeconds: board.refreshIntervalSeconds,
-                      sortOrder: board.sortOrder,
-                    })),
-                  }}
-                />
-              ))}
-            </div>
+            <SortableProjectList
+              projects={projects.map((project) => ({
+                id: project.id,
+                name: project.name,
+                ticketTypeCount: project._count.ticketTypes,
+                boards: project.boards.map((board) => ({
+                  id: board.id,
+                  name: board.name,
+                  ticketCount: board._count.tickets,
+                  maxSteps: board.maxSteps,
+                  refreshIntervalSeconds: board.refreshIntervalSeconds,
+                  sortOrder: board.sortOrder,
+                })),
+              }))}
+            />
           )}
         </div>
 

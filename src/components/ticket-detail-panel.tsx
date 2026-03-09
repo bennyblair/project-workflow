@@ -14,6 +14,10 @@ import { Input } from "@/components/ui/input";
 import { getTicketDetail, type TicketDetail } from "@/actions/ticket-detail";
 import { updateTicketFields, type ActionState } from "@/actions/ticket";
 import { LinkParentDialog } from "@/components/link-parent-dialog";
+import {
+  getDescriptionTemplates,
+  type DescriptionTemplateItem,
+} from "@/actions/description-templates";
 
 type Props = {
   ticketId: string | null;
@@ -524,6 +528,9 @@ function DescriptionSection({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(ticket.description ?? "");
+  const [templates, setTemplates] = useState<DescriptionTemplateItem[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
 
   // Sync when ticket changes
   useEffect(() => {
@@ -535,6 +542,21 @@ function DescriptionSection({
     fd.set("description", value);
     onSave(fd);
     setIsEditing(false);
+  };
+
+  const loadTemplates = async () => {
+    if (!templatesLoaded) {
+      const data = await getDescriptionTemplates(ticket.projectId);
+      setTemplates(data);
+      setTemplatesLoaded(true);
+    }
+    setShowTemplates((prev) => !prev);
+  };
+
+  const applyTemplate = (body: string) => {
+    const prefix = value.trim() ? value + "\n\n" : "";
+    setValue(prefix + body);
+    setShowTemplates(false);
   };
 
   return (
@@ -558,6 +580,14 @@ function DescriptionSection({
               variant="ghost"
               size="sm"
               className="h-7 text-xs"
+              onClick={loadTemplates}
+            >
+              Import Template
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
               onClick={handleSave}
               disabled={isPending}
             >
@@ -570,6 +600,7 @@ function DescriptionSection({
               onClick={() => {
                 setValue(ticket.description ?? "");
                 setIsEditing(false);
+                setShowTemplates(false);
               }}
             >
               Cancel
@@ -577,6 +608,31 @@ function DescriptionSection({
           </div>
         )}
       </div>
+
+      {/* Template picker dropdown */}
+      {isEditing && showTemplates && (
+        <div className="rounded-md border bg-background p-2 shadow-md max-h-[200px] overflow-y-auto space-y-1">
+          {templates.length === 0 ? (
+            <p className="px-2 py-1 text-xs text-muted-foreground italic">
+              No templates. Create them in Project Settings.
+            </p>
+          ) : (
+            templates.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                onClick={() => applyTemplate(t.body)}
+              >
+                <span className="font-medium">{t.name}</span>
+                <span className="ml-2 text-xs text-muted-foreground truncate">
+                  {t.body.slice(0, 60)}…
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
 
       {isEditing ? (
         <textarea
